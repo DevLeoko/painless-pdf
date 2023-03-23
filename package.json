@@ -1,0 +1,21 @@
+{
+  "name": "painless-pdf",
+  "version": "1.0.0",
+  "description": "Painless PDF genration library",
+  "main": "index.js",
+  "scripts": {
+    "dev": "ts-node-dev --files --respawn --inspect -- src/index.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "jspdf": "^2.5.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/node": "^18.15.3",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.0.2"
+  }
+}
