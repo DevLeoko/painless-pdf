@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import { PdfComponent } from "./PdfComponent";
-import { getWidth } from "./utils";
+import { getWidth } from "./component-utils";
 
 type MainAxisAlignment =
   | "start"
@@ -9,11 +9,16 @@ type MainAxisAlignment =
   | "space-between"
   | "space-around";
 
+export interface RowOptionsInput {
+  width?: number | { pct: number };
+  mainAxisAlignment?: MainAxisAlignment;
+  crossAxisAlignment?: "top" | "center" | "bottom";
+}
+
 interface RowOptions {
   width?: number | { pct: number };
-  height?: number;
-  mainAxisAlignment?: MainAxisAlignment;
-  verticalAlignment?: "top" | "center" | "bottom";
+  mainAxisAlignment: MainAxisAlignment;
+  crossAxisAlignment: "top" | "center" | "bottom";
 }
 
 export class RowComponent extends PdfComponent {
@@ -22,10 +27,13 @@ export class RowComponent extends PdfComponent {
   constructor(
     document: jsPDF,
     private children: PdfComponent[],
-    options: RowOptions = {}
+    options: RowOptionsInput = {}
   ) {
     super(document);
-    this.options = options;
+
+    if (!options.mainAxisAlignment) options.mainAxisAlignment = "start";
+    if (!options.crossAxisAlignment) options.crossAxisAlignment = "top";
+    this.options = options as RowOptions;
   }
 
   private fitChildrenToWidth(childrenWidth: number[], width: number): number[] {
@@ -137,10 +145,12 @@ export class RowComponent extends PdfComponent {
       fittedWidth,
       this.options.mainAxisAlignment ?? "start"
     );
-    const horizontalAlignment = this.options.verticalAlignment ?? "top";
+    const horizontalAlignment = this.options.crossAxisAlignment ?? "top";
 
     this.children.forEach((c, pos) => {
       const childX = x + childXs[pos];
+      // TODO: childHeight can exceed availableHeight for now. (treated similar to keepTogether = true)
+      // Wrapping logic should be implemented but is not trivial. (e.g. cells should be at same x in wrapped row)
       const childHeight = c.getHeight(fittedWidth[pos]);
       const childWidth = fittedWidth[pos];
       let childY = y;

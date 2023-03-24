@@ -1,19 +1,24 @@
-import jsPDF, { TextOptionsLight } from "jspdf";
+import jsPDF from "jspdf";
 import { PdfComponent } from "./PdfComponent";
-import { getWidth } from "./utils";
+import { getWidth } from "./component-utils";
 
-export type TextOptionsInput = TextOptionsLight & {
+export type TextOptionsInput = {
   width?: number | { pct: number };
   fontSize?: number;
+  lineHeightFactor?: number;
+  align?: "left" | "center" | "right";
+  noWrap?: boolean;
+  textColor?: string;
 };
 
-export type TextOptions = Omit<
-  TextOptionsInput,
-  "lineHeightFactor" | "fontSize"
-> & {
-  lineHeightFactor: number;
+export interface TextOptions {
+  width?: number | { pct: number };
   fontSize: number;
-};
+  lineHeightFactor: number;
+  align: "left" | "center" | "right";
+  noWrap: boolean;
+  textColor: string;
+}
 
 export class TextComponent extends PdfComponent {
   private options: TextOptions;
@@ -27,6 +32,9 @@ export class TextComponent extends PdfComponent {
 
     if (!options.lineHeightFactor) options.lineHeightFactor = 1.15;
     if (!options.fontSize) options.fontSize = 10;
+    if (!options.align) options.align = "left";
+    if (!options.noWrap) options.noWrap = false;
+    if (!options.textColor) options.textColor = "black";
     this.options = options as TextOptions;
   }
 
@@ -70,11 +78,23 @@ export class TextComponent extends PdfComponent {
     this.document.setLineHeightFactor(this.options.lineHeightFactor);
     this.document.setFontSize(this.options.fontSize);
 
+    const align = this.options.align;
+
+    let textX = x;
+    if (align === "center") {
+      textX = x + width / 2;
+    } else if (align === "right") {
+      textX = x + width;
+    }
+
     if (
-      lines.length == 1 ||
+      // lines.length == 1 ||
       this.getHeightOfLines(lines.length) <= availableHeight
     ) {
-      this.document.text(lines, x, y + this.fontSizeMm, this.options);
+      this.document.text(lines, textX, y + this.fontSizeMm * 0.8, {
+        baseline: "alphabetic",
+        align,
+      });
       return;
     }
 
@@ -86,7 +106,10 @@ export class TextComponent extends PdfComponent {
       nextPageLines.unshift(lines.pop()!);
     }
 
-    this.document.text(lines, x, y + this.fontSizeMm, this.options);
+    this.document.text(lines, textX, y + this.fontSizeMm * 0.8, {
+      baseline: "alphabetic",
+      align,
+    });
 
     return new TextComponent(this.document, nextPageLines.join(" "), {
       ...this.options,

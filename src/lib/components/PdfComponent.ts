@@ -3,7 +3,9 @@ import jsPDF from "jspdf";
 export abstract class PdfComponent {
   protected document: jsPDF;
 
-  constructor(document: jsPDF) {
+  // keepTogether is used to prevent a component from being split across pages
+  // For now is only respected by ColumnComponent
+  constructor(document: jsPDF, public keepTogether = false) {
     this.document = document;
   }
 
