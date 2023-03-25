@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import { HeaderFooterComponent } from "../components/HeaderFooterComponent";
 import { PdfComponent } from "../components/PdfComponent";
-import { InheritedOptions, PdfBlueprint } from "./PdfBlueprint";
+import { PdfBlueprint } from "./PdfBlueprint";
 
 export class PdfDocument {
   constructor(

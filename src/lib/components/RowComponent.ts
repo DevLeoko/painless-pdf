@@ -13,12 +13,14 @@ export interface RowOptionsInput {
   width?: Width;
   mainAxisAlignment?: MainAxisAlignment;
   crossAxisAlignment?: "top" | "center" | "bottom";
+  growIndex?: number;
 }
 
 interface RowOptions {
   width?: Width;
   mainAxisAlignment: MainAxisAlignment;
   crossAxisAlignment: "top" | "center" | "bottom";
+  growIndex?: number;
 }
 
 export class RowComponent extends PdfComponent {
@@ -38,10 +40,15 @@ export class RowComponent extends PdfComponent {
 
   private fitChildrenToWidth(childrenWidth: number[], width: number): number[] {
     const totalWidth = childrenWidth.reduce((acc, w) => acc + w, 0);
-    if (totalWidth >= width) return childrenWidth;
+    if (totalWidth <= width) {
+      if (this.options.growIndex !== undefined)
+        childrenWidth[this.options.growIndex] += width - totalWidth;
+
+      return childrenWidth;
+    }
 
     let children = childrenWidth.map((width, pos) => ({ width, pos }));
-    const newWidths: (number | null)[] = childrenWidth.map((w) => null);
+    const newWidths: (number | null)[] = childrenWidth.map(() => null);
 
     let equalWidth = width / children.length;
     while (newWidths.includes(null)) {
@@ -55,7 +62,7 @@ export class RowComponent extends PdfComponent {
         children = children.filter((c2) => c2.pos !== c.pos);
       });
 
-      if (children.length === 0) break;
+      if (childrenWithLessWidth.length === 0) break;
       equalWidth = width / children.length;
     }
 
@@ -126,7 +133,7 @@ export class RowComponent extends PdfComponent {
     }
   }
 
-  protected render(
+  public render(
     x: number,
     y: number,
     width: number,
@@ -165,7 +172,7 @@ export class RowComponent extends PdfComponent {
         case "bottom":
           childY = y + height - childHeight;
       }
-      c.apply(childX, childY, childHeight, width, dryRun, childWidth);
+      c.render(childX, childY, childWidth, childHeight, dryRun);
     });
 
     return {

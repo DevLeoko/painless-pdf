@@ -12,7 +12,7 @@ export abstract class PdfComponent {
   public abstract getPreferredWidth(containerWidth: number): number;
   public abstract getHeight(width: number): number;
 
-  protected abstract render(
+  public abstract render(
     x: number,
     y: number,
     width: number,

@@ -47,7 +47,7 @@ export class HeaderFooterComponent extends PdfComponent {
     }
   }
 
-  protected render(
+  public render(
     x: number,
     y: number,
     width: number,

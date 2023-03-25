@@ -56,7 +56,7 @@ export class ColumnComponent extends PdfComponent {
     }
   }
 
-  protected render(
+  public render(
     x: number,
     y: number,
     width: number,

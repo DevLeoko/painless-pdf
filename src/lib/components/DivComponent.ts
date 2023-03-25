@@ -59,8 +59,6 @@ export class DivComponent extends PdfComponent {
     availableHeight: number,
     dryRun: boolean
   ) {
-    console.log("DivComponent.render", width);
-
     const childWidth = width - this.selfWidth;
     const childAvailableHeight = availableHeight - this.selfHeight;
     const childX =
