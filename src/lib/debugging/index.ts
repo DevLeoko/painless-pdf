@@ -1,17 +1,7 @@
 // Express start
 import express from "express";
 import fs from "fs";
-import {
-  column,
-  div,
-  image,
-  row,
-  sizedBox,
-  table,
-  tableHeader,
-  tableRow,
-  text,
-} from "../builder/PdfBlueprint";
+import { ppDiv, ppImage } from "../builder/PdfBlueprint";
 import { PdfDocument } from "../builder/PdfDocument";
 
 const app = express();
@@ -30,8 +20,8 @@ app.get("/", (req, res) => {
   });
 
   const doc = new PdfDocument(
-    div(
-      image({
+    ppDiv(
+      ppImage({
         base64: base64Image,
         fileType: "PNG",
         originalWidth: 574,

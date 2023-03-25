@@ -24,7 +24,7 @@ export interface PdfBlueprint {
   invoke(doc: jsPDF, parentOptions: InheritedOptions): PdfComponent;
 }
 
-export function text(text: string, options?: TextOptionsInput): PdfBlueprint {
+export function ppText(text: string, options?: TextOptionsInput): PdfBlueprint {
   return {
     invoke(doc: jsPDF, parentOptions: InheritedOptions) {
       return new TextComponent(doc, text, {
@@ -35,7 +35,7 @@ export function text(text: string, options?: TextOptionsInput): PdfBlueprint {
   };
 }
 
-export function image(options: ImageOptions) {
+export function ppImage(options: ImageOptions) {
   return {
     invoke(doc: jsPDF) {
       return new ImageComponent(doc, options);
@@ -43,7 +43,7 @@ export function image(options: ImageOptions) {
   };
 }
 
-export function sizedBox(options: SizedBoxOptions) {
+export function ppSizedBox(options: SizedBoxOptions) {
   return {
     invoke(doc: jsPDF) {
       return new SizedBoxComponent(doc, options);
@@ -51,7 +51,7 @@ export function sizedBox(options: SizedBoxOptions) {
   };
 }
 
-export function div(
+export function ppDiv(
   child: PdfBlueprint,
   options: DivOptionsInput & InheritedOptions = {}
 ): PdfBlueprint {
@@ -66,7 +66,7 @@ export function div(
   };
 }
 
-export function row(
+export function ppRow(
   children: PdfBlueprint[],
   options: RowOptionsInput & InheritedOptions = {}
 ): PdfBlueprint {
@@ -83,7 +83,7 @@ export function row(
   };
 }
 
-export function column(
+export function ppColumn(
   children: PdfBlueprint[],
   options: ColumnOptionsInput & InheritedOptions = {}
 ): PdfBlueprint {
@@ -100,7 +100,7 @@ export function column(
   };
 }
 
-export function tableRow(
+export function ppTableRow(
   cells: PdfBlueprint[],
   options: {
     rowOptions?: DivOptionsInput & InheritedOptions;
@@ -113,9 +113,9 @@ export function tableRow(
   };
 }
 
-export type TableRowBlueprint = ReturnType<typeof tableRow>;
+export type TableRowBlueprint = ReturnType<typeof ppTableRow>;
 
-export function tableHeader(
+export function ppTableHeader(
   cells: PdfBlueprint[] | ((page: number) => PdfBlueprint[]),
   options: {
     rowOptions?: DivOptionsInput & InheritedOptions;
@@ -128,13 +128,13 @@ export function tableHeader(
   };
 }
 
-export type TableHeaderBlueprint = ReturnType<typeof tableHeader>;
+export type TableHeaderBlueprint = ReturnType<typeof ppTableHeader>;
 
 function createTableHeaderOrFooterComponent(
   doc: jsPDF,
   widths: Width[],
   parentOptions: InheritedOptions,
-  data: ReturnType<typeof tableHeader>
+  data: ReturnType<typeof ppTableHeader>
 ) {
   if (typeof data.cells === "function") {
     return (page: number) =>
@@ -160,30 +160,30 @@ function createTableRow(
   cellOptions: DivOptionsInput = {},
   rowOptions: DivOptionsInput = {}
 ): PdfBlueprint {
-  const tableRow = row(
+  const tableRow = ppRow(
     cells.map((col, i) => {
-      return div(col, { ...cellOptions, width: widths[i] });
+      return ppDiv(col, { ...cellOptions, width: widths[i] });
     })
   );
 
   if (rowOptions) {
-    return div(tableRow, rowOptions);
+    return ppDiv(tableRow, rowOptions);
   } else {
     return tableRow;
   }
 }
 
-export function table({
+export function ppTable({
   header,
   rows,
   widths,
   footer,
   options,
 }: {
-  header: ReturnType<typeof tableHeader>;
-  rows: ReturnType<typeof tableRow>[];
+  header: ReturnType<typeof ppTableHeader>;
+  rows: ReturnType<typeof ppTableRow>[];
   widths?: (null | Width)[];
-  footer?: ReturnType<typeof tableHeader>;
+  footer?: ReturnType<typeof ppTableHeader>;
   options?: InheritedOptions;
 }): PdfBlueprint {
   let numCols = header.cells.length ?? rows[0]?.cells.length ?? 0;
