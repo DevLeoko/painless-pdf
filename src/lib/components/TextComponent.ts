@@ -9,6 +9,9 @@ export type TextOptionsInput = {
   align?: "left" | "center" | "right";
   noWrap?: boolean;
   textColor?: string;
+  italic?: boolean;
+  bold?: boolean;
+  fontFamily?: string;
 };
 
 export interface TextOptions {
@@ -18,6 +21,9 @@ export interface TextOptions {
   align: "left" | "center" | "right";
   noWrap: boolean;
   textColor: string;
+  italic: boolean;
+  bold: boolean;
+  fontFamily: string;
 }
 
 export class TextComponent extends PdfComponent {
@@ -35,6 +41,9 @@ export class TextComponent extends PdfComponent {
     if (!options.align) options.align = "left";
     if (!options.noWrap) options.noWrap = false;
     if (!options.textColor) options.textColor = "black";
+    if (!options.italic) options.italic = false;
+    if (!options.bold) options.bold = false;
+    if (!options.fontFamily) options.fontFamily = "helvetica";
     this.options = options as TextOptions;
   }
 
@@ -85,6 +94,11 @@ export class TextComponent extends PdfComponent {
       this.document.setLineHeightFactor(this.options.lineHeightFactor);
       this.document.setFontSize(this.options.fontSize);
       this.document.setTextColor(this.options.textColor);
+      let style = "";
+      if (this.options.bold) style += "bold";
+      if (this.options.italic) style += "italic";
+
+      this.document.setFont(this.options.fontFamily, style || "normal");
     }
 
     const align = this.options.align;
