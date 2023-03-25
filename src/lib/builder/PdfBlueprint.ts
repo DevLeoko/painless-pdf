@@ -7,6 +7,7 @@ import { Width } from "../components/component-utils";
 import { DivComponent } from "../components/DivComponent";
 import { DivOptionsInput } from "../components/DivOptions";
 import { HeaderFooterComponent } from "../components/HeaderFooterComponent";
+import { ImageComponent, ImageOptions } from "../components/ImageComponent";
 import { PdfComponent } from "../components/PdfComponent";
 import { RowComponent, RowOptionsInput } from "../components/RowComponent";
 import {
@@ -34,6 +35,14 @@ export function text(text: string, options?: TextOptionsInput): PdfBlueprint {
   };
 }
 
+export function image(options: ImageOptions) {
+  return {
+    invoke(doc: jsPDF) {
+      return new ImageComponent(doc, options);
+    },
+  };
+}
+
 export function sizedBox(options: SizedBoxOptions) {
   return {
     invoke(doc: jsPDF) {
@@ -44,7 +53,7 @@ export function sizedBox(options: SizedBoxOptions) {
 
 export function div(
   child: PdfBlueprint,
-  options: DivOptionsInput & InheritedOptions
+  options: DivOptionsInput & InheritedOptions = {}
 ): PdfBlueprint {
   return {
     invoke(doc: jsPDF, parentOptions: InheritedOptions) {
