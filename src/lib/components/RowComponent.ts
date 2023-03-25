@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import { PdfComponent } from "./PdfComponent";
-import { getWidth } from "./component-utils";
+import { getWidth, Width } from "./component-utils";
 
 type MainAxisAlignment =
   | "start"
@@ -10,13 +10,13 @@ type MainAxisAlignment =
   | "space-around";
 
 export interface RowOptionsInput {
-  width?: number | { pct: number };
+  width?: Width;
   mainAxisAlignment?: MainAxisAlignment;
   crossAxisAlignment?: "top" | "center" | "bottom";
 }
 
 interface RowOptions {
-  width?: number | { pct: number };
+  width?: Width;
   mainAxisAlignment: MainAxisAlignment;
   crossAxisAlignment: "top" | "center" | "bottom";
 }
@@ -29,7 +29,7 @@ export class RowComponent extends PdfComponent {
     private children: PdfComponent[],
     options: RowOptionsInput = {}
   ) {
-    super(document);
+    super(document, true);
 
     if (!options.mainAxisAlignment) options.mainAxisAlignment = "start";
     if (!options.crossAxisAlignment) options.crossAxisAlignment = "top";
@@ -130,8 +130,9 @@ export class RowComponent extends PdfComponent {
     x: number,
     y: number,
     width: number,
-    availableHeight: number
-  ): void | PdfComponent {
+    availableHeight: number,
+    dryRun: boolean
+  ) {
     const childrenWidth = this.children.map((c) => c.getPreferredWidth(width));
     const fittedWidth = this.fitChildrenToWidth(childrenWidth, width);
 
@@ -164,7 +165,11 @@ export class RowComponent extends PdfComponent {
         case "bottom":
           childY = y + height - childHeight;
       }
-      c.apply(childX, childY, childHeight, width, childWidth);
+      c.apply(childX, childY, childHeight, width, dryRun, childWidth);
     });
+
+    return {
+      renderedHeight: height,
+    };
   }
 }

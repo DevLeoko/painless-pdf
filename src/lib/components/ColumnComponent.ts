@@ -1,17 +1,18 @@
 import jsPDF from "jspdf";
 import { PdfComponent } from "./PdfComponent";
-import { getWidth } from "./component-utils";
+import { getWidth, Width } from "./component-utils";
 
 export type CrossAxisAlignment = "start" | "center" | "end";
 
 export interface ColumnOptionsInput {
   crossAxisAlignment?: CrossAxisAlignment;
-  width?: number | { pct: number };
+  width?: Width;
+  keepTogether?: boolean;
 }
 
 interface ColumnOptions {
   crossAxisAlignment: CrossAxisAlignment;
-  width?: number | { pct: number };
+  width?: Width;
 }
 
 export class ColumnComponent extends PdfComponent {
@@ -22,7 +23,7 @@ export class ColumnComponent extends PdfComponent {
     private children: PdfComponent[],
     options: ColumnOptionsInput = {}
   ) {
-    super(document);
+    super(document, options.keepTogether);
 
     if (!options.crossAxisAlignment) options.crossAxisAlignment = "start";
     this.options = options as ColumnOptions;
@@ -42,14 +43,26 @@ export class ColumnComponent extends PdfComponent {
     return childrenHeight.reduce((acc, h) => acc + h, 0);
   }
 
+  private getChildX(x: number, width: number, childWidth: number): number {
+    const crossAxisAlignment = this.options.crossAxisAlignment || "start";
+
+    switch (crossAxisAlignment) {
+      case "start":
+        return x;
+      case "center":
+        return x + (width - childWidth) / 2;
+      case "end":
+        return x + width - childWidth;
+    }
+  }
+
   protected render(
     x: number,
     y: number,
     width: number,
-    availableHeight: number
-  ): PdfComponent | void {
-    const crossAxisAlignment = this.options.crossAxisAlignment || "start";
-
+    availableHeight: number,
+    dryRun: boolean
+  ) {
     let nextPageChildren: PdfComponent[] | null = null;
 
     let addY = 0;
@@ -69,36 +82,32 @@ export class ColumnComponent extends PdfComponent {
         break;
       }
 
-      let childX = x;
-      switch (crossAxisAlignment) {
-        case "start":
-          childX = x;
-          break;
-        case "center":
-          childX = x + (width - childWidth) / 2;
-          break;
-        case "end":
-          childX = x + width - childWidth;
-          break;
-      }
+      let childX = this.getChildX(x, width, childWidth);
 
-      const nextPageChild = child.apply(
+      const childRenderResult = child.apply(
         childX,
         y + addY,
         availableHeight - addY,
-        width
+        width,
+        dryRun
       );
 
-      if (nextPageChild) {
-        nextPageChildren = [nextPageChild, ...this.children.slice(i + 1)];
+      addY += childRenderResult.renderedHeight;
+
+      if (childRenderResult.nextPage) {
+        nextPageChildren = [
+          childRenderResult.nextPage,
+          ...this.children.slice(i + 1),
+        ];
         break;
       }
-
-      addY += childHeight;
     }
 
-    if (nextPageChildren) {
-      return new ColumnComponent(this.document, nextPageChildren, this.options);
-    }
+    return {
+      renderedHeight: addY,
+      nextPage: nextPageChildren
+        ? new ColumnComponent(this.document, nextPageChildren, this.options)
+        : undefined,
+    };
   }
 }

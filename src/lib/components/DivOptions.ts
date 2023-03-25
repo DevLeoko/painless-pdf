@@ -1,10 +1,12 @@
+import { Width } from "./component-utils";
+
 export interface BorderOptions {
   width: number;
   color: string;
 }
 
 export interface DivOptionsInput {
-  width?: { pct: number } | number;
+  width?: Width;
   padding?:
     | { top: number; right: number; bottom: number; left: number }
     | number
@@ -22,7 +24,7 @@ export interface DivOptionsInput {
 }
 
 export interface DivOptions {
-  width?: { pct: number } | number;
+  width?: Width;
   padding: { top: number; right: number; bottom: number; left: number };
   backgroundColor?: string;
   border: {

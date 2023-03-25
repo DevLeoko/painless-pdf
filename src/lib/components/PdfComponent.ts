@@ -16,20 +16,22 @@ export abstract class PdfComponent {
     x: number,
     y: number,
     width: number,
-    availableHeight: number
-  ): PdfComponent | void;
+    availableHeight: number,
+    dryRun: boolean
+  ): { nextPage?: PdfComponent; renderedHeight: number };
 
   public apply(
     x: number,
     y: number,
     availableHeight: number,
     containerWidth: number,
+    dryRun: boolean,
     maxWidth?: number
   ) {
     const preferredWidth = this.getPreferredWidth(containerWidth);
     const width = maxWidth
       ? Math.min(preferredWidth, maxWidth)
       : preferredWidth;
-    return this.render(x, y, width, availableHeight);
+    return this.render(x, y, width, availableHeight, dryRun);
   }
 }

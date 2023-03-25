@@ -1,9 +1,9 @@
 import jsPDF from "jspdf";
 import { PdfComponent } from "./PdfComponent";
-import { getWidth } from "./component-utils";
+import { getWidth, Width } from "./component-utils";
 
 export type TextOptionsInput = {
-  width?: number | { pct: number };
+  width?: Width;
   fontSize?: number;
   lineHeightFactor?: number;
   align?: "left" | "center" | "right";
@@ -12,7 +12,7 @@ export type TextOptionsInput = {
 };
 
 export interface TextOptions {
-  width?: number | { pct: number };
+  width?: Width;
   fontSize: number;
   lineHeightFactor: number;
   align: "left" | "center" | "right";
@@ -72,11 +72,20 @@ export class TextComponent extends PdfComponent {
     return (numLines - 1) * fontSize * this.options.lineHeightFactor + fontSize;
   }
 
-  public render(x: number, y: number, width: number, availableHeight: number) {
+  public render(
+    x: number,
+    y: number,
+    width: number,
+    availableHeight: number,
+    dryRun: boolean
+  ) {
     const lines = this.document.splitTextToSize(this.text, width);
 
-    this.document.setLineHeightFactor(this.options.lineHeightFactor);
-    this.document.setFontSize(this.options.fontSize);
+    if (!dryRun) {
+      this.document.setLineHeightFactor(this.options.lineHeightFactor);
+      this.document.setFontSize(this.options.fontSize);
+      this.document.setTextColor(this.options.textColor);
+    }
 
     const align = this.options.align;
 
@@ -87,15 +96,18 @@ export class TextComponent extends PdfComponent {
       textX = x + width;
     }
 
+    const height = this.getHeightOfLines(lines.length);
     if (
       // lines.length == 1 ||
-      this.getHeightOfLines(lines.length) <= availableHeight
+      height <= availableHeight
     ) {
-      this.document.text(lines, textX, y + this.fontSizeMm * 0.8, {
-        baseline: "alphabetic",
-        align,
-      });
-      return;
+      if (!dryRun) {
+        this.document.text(lines, textX, y + this.fontSizeMm * 0.8, {
+          baseline: "alphabetic",
+          align,
+        });
+      }
+      return { renderedHeight: height };
     }
 
     const nextPageLines: string[] = [];
@@ -106,14 +118,19 @@ export class TextComponent extends PdfComponent {
       nextPageLines.unshift(lines.pop()!);
     }
 
-    this.document.text(lines, textX, y + this.fontSizeMm * 0.8, {
-      baseline: "alphabetic",
-      align,
-    });
+    if (!dryRun) {
+      this.document.text(lines, textX, y + this.fontSizeMm * 0.8, {
+        baseline: "alphabetic",
+        align,
+      });
+    }
 
-    return new TextComponent(this.document, nextPageLines.join(" "), {
-      ...this.options,
-      width: width,
-    });
+    return {
+      nextPage: new TextComponent(this.document, nextPageLines.join(" "), {
+        ...this.options,
+        width: width,
+      }),
+      renderedHeight: this.getHeightOfLines(lines.length),
+    };
   }
 }

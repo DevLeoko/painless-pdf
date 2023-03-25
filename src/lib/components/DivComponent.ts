@@ -52,72 +52,101 @@ export class DivComponent extends PdfComponent {
     return this.child.getHeight(width - this.selfWidth) + this.selfHeight;
   }
 
-  public render(x: number, y: number, width: number, availableHeight: number) {
+  public render(
+    x: number,
+    y: number,
+    width: number,
+    availableHeight: number,
+    dryRun: boolean
+  ) {
+    console.log("DivComponent.render", width);
+
     const childWidth = width - this.selfWidth;
     const childAvailableHeight = availableHeight - this.selfHeight;
     const childX =
       x + this.options.padding.left + this.options.border.left.width;
     const childY = y + this.options.padding.top + this.options.border.top.width;
+    const childPreferredHeight = this.child.getHeight(childWidth);
 
-    const childHeight = Math.min(
-      this.child.getHeight(childWidth),
-      childAvailableHeight
-    );
-
-    const height = childHeight + this.selfHeight;
-
-    if (this.options.backgroundColor) {
-      const bgX = x + this.options.border.left.width;
-      const bgY = y + this.options.border.top.width;
-      const bgWidth =
-        width -
-        this.options.border.left.width -
-        this.options.border.right.width;
-      const bgHeight =
-        height -
-        this.options.border.top.width -
-        this.options.border.bottom.width;
-      this.document.setFillColor(this.options.backgroundColor);
-      this.document.rect(bgX, bgY, bgWidth, bgHeight, "F");
+    if (
+      childPreferredHeight > childAvailableHeight &&
+      this.child.keepTogether
+    ) {
+      return {
+        nextPage: this,
+        renderedHeight: 0,
+      };
     }
 
-    if (this.options.border.top.width) {
-      this.document.setDrawColor(this.options.border.top.color);
-      this.document.setLineWidth(this.options.border.top.width);
-      const bY = y + this.options.border.top.width / 2;
-      this.document.line(x, bY, x + width, bY);
-    }
-
-    if (this.options.border.right.width) {
-      this.document.setDrawColor(this.options.border.right.color);
-      this.document.setLineWidth(this.options.border.right.width);
-      const bX = x + width - this.options.border.right.width / 2;
-      this.document.line(bX, y, bX, y + height);
-    }
-
-    if (this.options.border.bottom.width) {
-      this.document.setDrawColor(this.options.border.bottom.color);
-      this.document.setLineWidth(this.options.border.bottom.width);
-      const bY = y + height - this.options.border.bottom.width / 2;
-      this.document.line(x, bY, x + width, bY);
-    }
-
-    if (this.options.border.left.width) {
-      this.document.setDrawColor(this.options.border.left.color);
-      this.document.setLineWidth(this.options.border.left.width);
-      const bX = x + this.options.border.left.width / 2;
-      this.document.line(bX, y, bX, y + height);
-    }
-
-    const nextPageChild = this.child.apply(
+    const childRenderResult = this.child.apply(
       childX,
       childY,
       childAvailableHeight,
-      childWidth
+      childWidth,
+      true
     );
 
-    if (!nextPageChild) return;
+    const height =
+      childRenderResult.renderedHeight == 0
+        ? 0
+        : childRenderResult.renderedHeight + this.selfHeight;
 
-    return new DivComponent(this.document, nextPageChild, this.options);
+    if (height && !dryRun) {
+      if (this.options.backgroundColor) {
+        const bgX = x + this.options.border.left.width;
+        const bgY = y + this.options.border.top.width;
+        const bgWidth =
+          width -
+          this.options.border.left.width -
+          this.options.border.right.width;
+        const bgHeight =
+          height -
+          this.options.border.top.width -
+          this.options.border.bottom.width;
+        this.document.setFillColor(this.options.backgroundColor);
+        this.document.rect(bgX, bgY, bgWidth, bgHeight, "F");
+      }
+
+      if (this.options.border.top.width) {
+        this.document.setDrawColor(this.options.border.top.color);
+        this.document.setLineWidth(this.options.border.top.width);
+        const bY = y + this.options.border.top.width / 2;
+        this.document.line(x, bY, x + width, bY);
+      }
+
+      if (this.options.border.right.width) {
+        this.document.setDrawColor(this.options.border.right.color);
+        this.document.setLineWidth(this.options.border.right.width);
+        const bX = x + width - this.options.border.right.width / 2;
+        this.document.line(bX, y, bX, y + height);
+      }
+
+      if (this.options.border.bottom.width) {
+        this.document.setDrawColor(this.options.border.bottom.color);
+        this.document.setLineWidth(this.options.border.bottom.width);
+        const bY = y + height - this.options.border.bottom.width / 2;
+        this.document.line(x, bY, x + width, bY);
+      }
+
+      if (this.options.border.left.width) {
+        this.document.setDrawColor(this.options.border.left.color);
+        this.document.setLineWidth(this.options.border.left.width);
+        const bX = x + this.options.border.left.width / 2;
+        this.document.line(bX, y, bX, y + height);
+      }
+
+      this.child.apply(childX, childY, childAvailableHeight, childWidth, false);
+    }
+
+    return {
+      nextPage: childRenderResult.nextPage
+        ? new DivComponent(
+            this.document,
+            childRenderResult.nextPage,
+            this.options
+          )
+        : undefined,
+      renderedHeight: height,
+    };
   }
 }

@@ -51,43 +51,65 @@ export class HeaderFooterComponent extends PdfComponent {
     x: number,
     y: number,
     width: number,
-    availableHeight: number
-  ): PdfComponent | void {
+    availableHeight: number,
+    dryRun: boolean
+  ) {
     const header = this.getHeader();
     const footer = this.getFooter();
     const headerHeight = header?.getHeight(width) ?? 0;
     const footerHeight = footer?.getHeight(width) ?? 0;
 
-    if (header) {
-      header.apply(x, y, headerHeight, width);
+    if (headerHeight + footerHeight > availableHeight) {
+      return {
+        nextPage: this,
+        renderedHeight: 0,
+      };
     }
 
     const childAvailableHeight =
       availableHeight -
       headerHeight -
       (this.options.footerAtBottom ? 0 : footerHeight);
+
     const childY = y + headerHeight;
-    const nextPageChild = this.child.apply(
+    const childRenderResult = this.child.apply(
       x,
       childY,
       childAvailableHeight,
-      width
+      width,
+      dryRun
     );
 
-    const footerY = this.options.footerAtBottom
-      ? y + availableHeight - footerHeight
-      : childY + this.child.getHeight(width);
-    if (footer) {
-      footer.apply(x, footerY, footerHeight, width);
+    if (childRenderResult.renderedHeight == 0) {
+      return {
+        nextPage: this,
+        renderedHeight: 0,
+      };
     }
 
-    if (!nextPageChild) return;
+    if (header) {
+      header.apply(x, y, headerHeight, width, dryRun);
+    }
 
-    return new HeaderFooterComponent(
-      this.document,
-      nextPageChild,
-      this.options,
-      this.iteration + 1
-    );
+    if (footer) {
+      const footerY = this.options.footerAtBottom
+        ? y + availableHeight - footerHeight
+        : childY + childRenderResult.renderedHeight;
+
+      footer.apply(x, footerY, footerHeight, width, dryRun);
+    }
+
+    return {
+      renderedHeight:
+        childRenderResult.renderedHeight + headerHeight + footerHeight,
+      nextPage: childRenderResult.nextPage
+        ? new HeaderFooterComponent(
+            this.document,
+            childRenderResult.nextPage,
+            this.options,
+            this.iteration + 1
+          )
+        : undefined,
+    };
   }
 }

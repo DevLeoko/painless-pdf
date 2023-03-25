@@ -1,10 +1,10 @@
 import jsPDF from "jspdf";
 import { PdfComponent } from "./PdfComponent";
-import { getWidth } from "./component-utils";
+import { getWidth, Width } from "./component-utils";
 
 export interface SizedBoxOptions {
   height?: number;
-  width?: number | { pct: number };
+  width?: Width;
 }
 
 export class SizedBoxComponent extends PdfComponent {
@@ -32,7 +32,10 @@ export class SizedBoxComponent extends PdfComponent {
     y: number,
     width: number,
     availableHeight: number
-  ): void {
+  ) {
     // No rendering needed for SizedBoxComponent as it's just an empty space
+    return {
+      renderedHeight: Math.min(availableHeight, this.getHeight(width)),
+    };
   }
 }
