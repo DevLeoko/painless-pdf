@@ -1,6 +1,6 @@
 {
   "name": "painless-pdf",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Painless PDF generation for node and the browser",
   "repository": "https://github.com/DevLeoko/painless-pdf",
   "main": "src/index.ts",

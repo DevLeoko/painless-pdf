@@ -17,7 +17,8 @@ export abstract class PdfComponent {
     y: number,
     width: number,
     availableHeight: number,
-    dryRun: boolean
+    dryRun: boolean,
+    fillHeight: boolean
   ): { nextPage?: PdfComponent; renderedHeight: number };
 
   public apply(
@@ -26,12 +27,17 @@ export abstract class PdfComponent {
     availableHeight: number,
     containerWidth: number,
     dryRun: boolean,
-    maxWidth?: number
+    maxWidth?: number,
+    fillHeight = false
   ) {
     const preferredWidth = this.getPreferredWidth(containerWidth);
-    const width = maxWidth
-      ? Math.min(preferredWidth, maxWidth)
-      : preferredWidth;
-    return this.render(x, y, width, availableHeight, dryRun);
+    // TODO: Components should never prefer a width larger than the container, when the container has a reasonable width (seems to still happen)
+    let width = Math.min(preferredWidth, containerWidth);
+
+    if (maxWidth) {
+      width = Math.min(width, maxWidth);
+    }
+
+    return this.render(x, y, width, availableHeight, dryRun, fillHeight);
   }
 }

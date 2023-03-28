@@ -52,7 +52,10 @@ export class PdfDocument {
       content = renderResult.nextPage;
       if (content) {
         if (renderResult.renderedHeight == 0) {
-          throw new Error(
+          // throw new Error(
+          //   "Rendered empty page while there is still content to render (infinite loop?)"
+          // );
+          console.log(
             "Rendered empty page while there is still content to render (infinite loop?)"
           );
         }

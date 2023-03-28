@@ -9,17 +9,19 @@ type MainAxisAlignment =
   | "space-between"
   | "space-around";
 
+type CrossAxisAlignment = "top" | "center" | "bottom" | "stretch";
+
 export interface RowOptionsInput {
   width?: Width;
   mainAxisAlignment?: MainAxisAlignment;
-  crossAxisAlignment?: "top" | "center" | "bottom";
+  crossAxisAlignment?: CrossAxisAlignment;
   growIndex?: number;
 }
 
 interface RowOptions {
   width?: Width;
   mainAxisAlignment: MainAxisAlignment;
-  crossAxisAlignment: "top" | "center" | "bottom";
+  crossAxisAlignment: CrossAxisAlignment;
   growIndex?: number;
 }
 
@@ -138,15 +140,21 @@ export class RowComponent extends PdfComponent {
     y: number,
     width: number,
     availableHeight: number,
-    dryRun: boolean
+    dryRun: boolean,
+    fillHeight: boolean
   ) {
+    if (this.children.length === 0) return { renderedHeight: 0 };
+
     const childrenWidth = this.children.map((c) => c.getPreferredWidth(width));
     const fittedWidth = this.fitChildrenToWidth(childrenWidth, width);
 
     const childrenHeight = this.children.map((c, pos) =>
       c.getHeight(fittedWidth[pos])
     );
-    const height = Math.max(...childrenHeight);
+    let height = Math.max(...childrenHeight);
+    if (fillHeight) {
+      height = Math.max(height, availableHeight);
+    }
 
     const childXs = this.computeChildXs(
       width,
@@ -164,6 +172,7 @@ export class RowComponent extends PdfComponent {
       let childY = y;
       switch (horizontalAlignment) {
         case "top":
+        case "stretch":
           childY = y;
           break;
         case "center":
@@ -172,7 +181,15 @@ export class RowComponent extends PdfComponent {
         case "bottom":
           childY = y + height - childHeight;
       }
-      c.render(childX, childY, childWidth, childHeight, dryRun);
+
+      c.render(
+        childX,
+        childY,
+        childWidth,
+        horizontalAlignment == "stretch" ? height : childHeight,
+        dryRun,
+        horizontalAlignment == "stretch"
+      );
     });
 
     return {

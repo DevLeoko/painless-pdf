@@ -12,6 +12,7 @@ export type TextOptionsInput = {
   italic?: boolean;
   bold?: boolean;
   fontFamily?: string;
+  underline?: boolean;
 };
 
 export interface TextOptions {
@@ -23,6 +24,7 @@ export interface TextOptions {
   textColor: string;
   italic: boolean;
   bold: boolean;
+  underline: boolean;
   fontFamily: string;
 }
 
@@ -43,6 +45,7 @@ export class TextComponent extends PdfComponent {
     if (!options.textColor) options.textColor = "black";
     if (!options.italic) options.italic = false;
     if (!options.bold) options.bold = false;
+    if (!options.underline) options.underline = false;
     if (!options.fontFamily) options.fontFamily = "helvetica";
     this.options = options as TextOptions;
   }
@@ -60,6 +63,8 @@ export class TextComponent extends PdfComponent {
 
     let width = maxWidth;
     if (!this.options?.width) {
+      this.applyFontStyles();
+
       // We add 0.5mm to counteract any rounding errors causing the text to wrap unnecessarily
       this.document.setFontSize(this.options.fontSize);
       width =
@@ -71,14 +76,23 @@ export class TextComponent extends PdfComponent {
   }
 
   public getHeight(width: number): number {
+    this.applyFontStyles();
     const lines = this.document.splitTextToSize(this.text, width);
     return this.getHeightOfLines(lines.length);
   }
 
   private getHeightOfLines(numLines: number) {
-    // Point to mm conversion
-    const fontSize = this.fontSizeMm;
-    return (numLines - 1) * fontSize * this.options.lineHeightFactor + fontSize;
+    return numLines * this.fontSizeMm * this.options.lineHeightFactor;
+  }
+
+  private applyFontStyles() {
+    this.document.setLineHeightFactor(this.options.lineHeightFactor);
+    this.document.setFontSize(this.options.fontSize);
+    this.document.setTextColor(this.options.textColor);
+    let style = "";
+    if (this.options.bold) style += "bold";
+    if (this.options.italic) style += "italic";
+    this.document.setFont(this.options.fontFamily, style || "normal");
   }
 
   public render(
@@ -90,17 +104,6 @@ export class TextComponent extends PdfComponent {
   ) {
     const lines = this.document.splitTextToSize(this.text, width);
 
-    if (!dryRun) {
-      this.document.setLineHeightFactor(this.options.lineHeightFactor);
-      this.document.setFontSize(this.options.fontSize);
-      this.document.setTextColor(this.options.textColor);
-      let style = "";
-      if (this.options.bold) style += "bold";
-      if (this.options.italic) style += "italic";
-
-      this.document.setFont(this.options.fontFamily, style || "normal");
-    }
-
     const align = this.options.align;
 
     let textX = x;
@@ -108,20 +111,6 @@ export class TextComponent extends PdfComponent {
       textX = x + width / 2;
     } else if (align === "right") {
       textX = x + width;
-    }
-
-    const height = this.getHeightOfLines(lines.length);
-    if (
-      // lines.length == 1 ||
-      height <= availableHeight
-    ) {
-      if (!dryRun) {
-        this.document.text(lines, textX, y + this.fontSizeMm * 0.8, {
-          baseline: "alphabetic",
-          align,
-        });
-      }
-      return { renderedHeight: height };
     }
 
     const nextPageLines: string[] = [];
@@ -133,17 +122,40 @@ export class TextComponent extends PdfComponent {
     }
 
     if (!dryRun) {
-      this.document.text(lines, textX, y + this.fontSizeMm * 0.8, {
+      this.applyFontStyles();
+      if (this.options.underline) {
+        this.document.setDrawColor(this.options.textColor);
+      }
+
+      this.document.text(lines, textX, y + this.fontSizeMm * 0.85, {
         baseline: "alphabetic",
         align,
       });
+
+      if (this.options.underline) {
+        let underlineY = y + this.fontSizeMm * 0.95;
+        this.document.setLineWidth(0.1);
+
+        for (const line of lines) {
+          this.document.line(
+            x,
+            underlineY,
+            x + this.document.getTextWidth(line),
+            underlineY
+          );
+          underlineY += this.fontSizeMm * this.options.lineHeightFactor;
+        }
+      }
     }
 
     return {
-      nextPage: new TextComponent(this.document, nextPageLines.join(" "), {
-        ...this.options,
-        width: width,
-      }),
+      nextPage:
+        nextPageLines.length == 0
+          ? undefined
+          : new TextComponent(this.document, nextPageLines.join(" "), {
+              ...this.options,
+              width: width,
+            }),
       renderedHeight: this.getHeightOfLines(lines.length),
     };
   }

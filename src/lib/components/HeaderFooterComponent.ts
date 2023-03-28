@@ -21,7 +21,11 @@ export class HeaderFooterComponent extends PdfComponent {
   }
 
   public getPreferredWidth(containerWidth: number): number {
-    return this.child.getPreferredWidth(containerWidth);
+    return Math.max(
+      this.getHeader()?.getPreferredWidth(containerWidth) ?? 0,
+      this.getFooter()?.getPreferredWidth(containerWidth) ?? 0,
+      this.child.getPreferredWidth(containerWidth)
+    );
   }
 
   public getHeight(width: number): number {
@@ -52,7 +56,8 @@ export class HeaderFooterComponent extends PdfComponent {
     y: number,
     width: number,
     availableHeight: number,
-    dryRun: boolean
+    dryRun: boolean,
+    fillHeight: boolean
   ) {
     const header = this.getHeader();
     const footer = this.getFooter();
@@ -77,10 +82,12 @@ export class HeaderFooterComponent extends PdfComponent {
       childY,
       childAvailableHeight,
       width,
-      dryRun
+      dryRun,
+      undefined,
+      fillHeight
     );
 
-    if (childRenderResult.renderedHeight == 0) {
+    if (childRenderResult.renderedHeight == 0 && childRenderResult.nextPage) {
       return {
         nextPage: this,
         renderedHeight: 0,

@@ -3,7 +3,7 @@ import { PdfComponent } from "./PdfComponent";
 import { getWidth, Width } from "./component-utils";
 
 export interface SizedBoxOptions {
-  height?: number;
+  height?: number | "max";
   width?: Width;
 }
 
@@ -24,6 +24,9 @@ export class SizedBoxComponent extends PdfComponent {
   }
 
   public getHeight(width: number): number {
+    if (this.options.height === "max")
+      return this.document.internal.pageSize.height;
+
     return this.options.height ?? 0;
   }
 

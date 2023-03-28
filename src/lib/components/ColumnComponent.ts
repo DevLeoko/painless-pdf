@@ -20,7 +20,7 @@ export class ColumnComponent extends PdfComponent {
 
   constructor(
     document: jsPDF,
-    private children: PdfComponent[],
+    private children: (PdfComponent | "spacer")[],
     options: ColumnOptionsInput = {}
   ) {
     super(document, options.keepTogether);
@@ -32,14 +32,20 @@ export class ColumnComponent extends PdfComponent {
   public getPreferredWidth(containerWidth: number): number {
     if (this.options.width) return getWidth(containerWidth, this.options.width);
 
-    const childrenWidth = this.children.map((c) =>
-      c.getPreferredWidth(containerWidth)
-    );
+    if (this.children.length === 0) return 0;
+
+    const childrenWidth = this.children
+      .filter((c) => c != "spacer")
+      .map((c) => (c as PdfComponent).getPreferredWidth(containerWidth));
     return Math.max(...childrenWidth);
   }
 
   public getHeight(width: number): number {
-    const childrenHeight = this.children.map((c) => c.getHeight(width));
+    if (this.children.length === 0) return 0;
+
+    const childrenHeight = this.children
+      .filter((c) => c != "spacer")
+      .map((c) => (c as PdfComponent).getHeight(width));
     return childrenHeight.reduce((acc, h) => acc + h, 0);
   }
 
@@ -61,9 +67,22 @@ export class ColumnComponent extends PdfComponent {
     y: number,
     width: number,
     availableHeight: number,
-    dryRun: boolean
+    dryRun: boolean,
+    fillHeight: boolean
   ) {
-    let nextPageChildren: PdfComponent[] | null = null;
+    if (this.children.length === 0)
+      return { renderedHeight: 0, nextPage: undefined };
+
+    let nextPageChildren: (PdfComponent | "spacer")[] | null = null;
+
+    let spacerHeight = 0;
+    if (fillHeight) {
+      const regularHeight = this.getHeight(width);
+      const spacerCount = this.children.filter((c) => c === "spacer").length;
+      if (regularHeight < availableHeight && spacerCount > 0) {
+        spacerHeight = (availableHeight - regularHeight) / spacerCount;
+      }
+    }
 
     let addY = 0;
     for (let i = 0; i < this.children.length; i++) {
@@ -73,6 +92,11 @@ export class ColumnComponent extends PdfComponent {
       }
 
       const child = this.children[i];
+
+      if (child === "spacer") {
+        addY += spacerHeight;
+        continue;
+      }
 
       const childWidth = child.getPreferredWidth(width);
       const childHeight = child.getHeight(childWidth);

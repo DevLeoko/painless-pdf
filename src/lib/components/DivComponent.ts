@@ -5,7 +5,7 @@ import {
   transformInputOptions,
 } from "./DivOptions";
 import { PdfComponent } from "./PdfComponent";
-import { getWidth } from "./component-utils";
+import { EPSILON, getWidth } from "./component-utils";
 
 export class DivComponent extends PdfComponent {
   private options: DivOptions;
@@ -57,7 +57,8 @@ export class DivComponent extends PdfComponent {
     y: number,
     width: number,
     availableHeight: number,
-    dryRun: boolean
+    dryRun: boolean,
+    fillHeight: boolean
   ) {
     const childWidth = width - this.selfWidth;
     const childAvailableHeight = availableHeight - this.selfHeight;
@@ -67,7 +68,7 @@ export class DivComponent extends PdfComponent {
     const childPreferredHeight = this.child.getHeight(childWidth);
 
     if (
-      childPreferredHeight > childAvailableHeight &&
+      childPreferredHeight >= childAvailableHeight + EPSILON &&
       this.child.keepTogether
     ) {
       return {
@@ -81,13 +82,19 @@ export class DivComponent extends PdfComponent {
       childY,
       childAvailableHeight,
       childWidth,
-      true
+      true,
+      undefined,
+      fillHeight
     );
 
-    const height =
-      childRenderResult.renderedHeight == 0
-        ? 0
-        : childRenderResult.renderedHeight + this.selfHeight;
+    let height;
+    if (childRenderResult.renderedHeight == 0) {
+      height = 0;
+    } else if (fillHeight) {
+      height = availableHeight;
+    } else {
+      height = childRenderResult.renderedHeight + this.selfHeight;
+    }
 
     if (height && !dryRun) {
       if (this.options.backgroundColor) {
@@ -133,7 +140,15 @@ export class DivComponent extends PdfComponent {
         this.document.line(bX, y, bX, y + height);
       }
 
-      this.child.apply(childX, childY, childAvailableHeight, childWidth, false);
+      this.child.apply(
+        childX,
+        childY,
+        childAvailableHeight,
+        childWidth,
+        false,
+        undefined,
+        fillHeight
+      ); // TODO: fill height should be passed here
     }
 
     return {

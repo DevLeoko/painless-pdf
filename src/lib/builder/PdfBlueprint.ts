@@ -24,6 +24,14 @@ export interface PdfBlueprint {
   invoke(doc: jsPDF, parentOptions: InheritedOptions): PdfComponent;
 }
 
+export function ppPageBreak() {
+  return {
+    invoke(doc: jsPDF) {
+      return new SizedBoxComponent(doc, { height: "max" });
+    },
+  };
+}
+
 export function ppText(text: string, options?: TextOptionsInput): PdfBlueprint {
   return {
     invoke(doc: jsPDF, parentOptions: InheritedOptions) {
@@ -84,7 +92,7 @@ export function ppRow(
 }
 
 export function ppColumn(
-  children: PdfBlueprint[],
+  children: (PdfBlueprint | "spacer")[],
   options: ColumnOptionsInput & InheritedOptions = {}
 ): PdfBlueprint {
   return {
@@ -92,7 +100,9 @@ export function ppColumn(
       return new ColumnComponent(
         doc,
         children.map((child) =>
-          child.invoke(doc, { ...parentOptions, ...options })
+          child === "spacer"
+            ? child
+            : child.invoke(doc, { ...parentOptions, ...options })
         ),
         options
       );
@@ -132,45 +142,114 @@ export type TableHeaderBlueprint = ReturnType<typeof ppTableHeader>;
 
 function createTableHeaderOrFooterComponent(
   doc: jsPDF,
-  widths: Width[],
+  widths: (Width | null)[],
   parentOptions: InheritedOptions,
-  data: ReturnType<typeof ppTableHeader>
+  cellOptions: DivOptionsInput | undefined,
+  data: TableHeaderBlueprint,
+  borders: TableBorderOptions | undefined,
+  firstRow: boolean
 ) {
   if (typeof data.cells === "function") {
     return (page: number) =>
       createTableRow(
         widths,
         (data.cells as (page: number) => PdfBlueprint[])(page),
-        data.options.cellOptions,
-        data.options.rowOptions
+        merge(cellOptions, data.options.cellOptions),
+        data.options.rowOptions,
+        borders,
+        firstRow
       ).invoke(doc, parentOptions);
   } else {
     return createTableRow(
       widths,
       data.cells,
-      data.options.cellOptions,
-      data.options.rowOptions
+      merge(cellOptions, data.options.cellOptions),
+      data.options.rowOptions,
+      borders,
+      firstRow
     ).invoke(doc, parentOptions);
   }
 }
 
+interface TableBorderOptions {
+  color: string;
+  verticalWidth: number | number[];
+  horizontalWidth: number;
+}
+
 function createTableRow(
-  widths: Width[],
+  widths: (Width | null)[],
   cells: PdfBlueprint[],
-  cellOptions: DivOptionsInput = {},
-  rowOptions: DivOptionsInput = {}
+  cellOptions: DivOptionsInput | undefined,
+  rowOptions: DivOptionsInput | undefined,
+  borders: TableBorderOptions | undefined,
+  firstRow: boolean
 ): PdfBlueprint {
+  let growIndex: number | undefined = widths.findIndex((w) => w === null);
+  if (growIndex === -1) growIndex = undefined;
+
   const tableRow = ppRow(
     cells.map((col, i) => {
-      return ppDiv(col, { ...cellOptions, width: widths[i] });
-    })
+      let verticalBorders = undefined;
+      if (borders) {
+        const isArray = Array.isArray(borders.verticalWidth);
+        verticalBorders = {
+          left:
+            i === 0
+              ? {
+                  color: borders.color,
+                  width: isArray
+                    ? (borders.verticalWidth as number[])[0]
+                    : (borders.verticalWidth as number),
+                }
+              : undefined,
+          right: {
+            color: borders.color!,
+            width: isArray
+              ? (borders.verticalWidth as number[])[i + 1]
+              : (borders.verticalWidth as number),
+          },
+        };
+      }
+
+      return ppDiv(col, {
+        border: verticalBorders,
+        ...cellOptions,
+        width: widths[i] ?? undefined,
+      });
+    }),
+    {
+      growIndex,
+      crossAxisAlignment: "stretch",
+      width: growIndex !== undefined ? { relative: 1 } : undefined,
+    }
   );
 
-  if (rowOptions) {
-    return ppDiv(tableRow, rowOptions);
+  if (rowOptions || borders?.horizontalWidth) {
+    let borderOptions = undefined;
+    if (borders?.horizontalWidth) {
+      const border = { width: borders.horizontalWidth, color: borders.color };
+      borderOptions = {
+        top: firstRow ? border : undefined,
+        bottom: border,
+      };
+    }
+
+    return ppDiv(tableRow, { border: borderOptions, ...rowOptions });
   } else {
     return tableRow;
   }
+}
+
+function merge(
+  a: Record<string, any> | undefined,
+  b: Record<string, any> | undefined
+) {
+  if (!a) return b;
+  if (!b) return a;
+  if (!a && !b) return undefined;
+
+  return { ...a, ...b };
 }
 
 export function ppTable({
@@ -179,14 +258,22 @@ export function ppTable({
   widths,
   footer,
   options,
+  borders,
+  cellOptions,
 }: {
-  header: ReturnType<typeof ppTableHeader>;
-  rows: ReturnType<typeof ppTableRow>[];
+  header?: TableHeaderBlueprint;
+  rows: (TableRowBlueprint | "spacer")[];
   widths?: (null | Width)[];
-  footer?: ReturnType<typeof ppTableHeader>;
+  footer?: TableHeaderBlueprint;
   options?: InheritedOptions;
+  cellOptions?: DivOptionsInput;
+  borders?: TableBorderOptions;
 }): PdfBlueprint {
-  let numCols = header.cells.length ?? rows[0]?.cells.length ?? 0;
+  if (rows[0] == "spacer") throw new Error("First row cannot be a spacer");
+
+  let numCols = header?.cells?.length ?? rows[0]?.cells.length ?? 0;
+
+  if (!header && !footer && rows.length === 0) return ppSizedBox({ height: 0 });
 
   if (!widths) {
     if (numCols === 0) {
@@ -196,42 +283,62 @@ export function ppTable({
     }
 
     widths = new Array(numCols).fill({ relative: 1 / numCols });
-  }
+  } else {
+    numCols = widths.length;
 
-  const computedWidths = widths.map((w) => {
-    if (w === null) {
-      return { relative: 1 };
-    } else {
-      return w;
+    // There can only be one null width
+    if (widths.filter((w) => w === null).length > 1)
+      throw new Error("Only one column can have a null width");
+
+    if (
+      borders &&
+      Array.isArray(borders.verticalWidth) &&
+      borders.verticalWidth.length !== numCols + 1
+    ) {
+      throw new Error(
+        "Number of vertical borders must be one more than the number of columns"
+      );
     }
-  }) as Width[];
+  }
 
   return {
     invoke(doc: jsPDF, parentOptions: InheritedOptions) {
       parentOptions = { ...parentOptions, ...options };
 
-      const headerComponent = createTableHeaderOrFooterComponent(
-        doc,
-        computedWidths,
-        parentOptions,
-        header
-      );
+      const headerComponent = header
+        ? createTableHeaderOrFooterComponent(
+            doc,
+            widths!,
+            parentOptions,
+            cellOptions,
+            header,
+            borders,
+            true
+          )
+        : undefined;
 
-      const rowsComponents = rows.map((row) =>
-        createTableRow(
-          computedWidths,
-          row.cells,
-          row.options.cellOptions,
-          row.options.rowOptions
-        ).invoke(doc, parentOptions)
+      const rowsComponents = rows.map((row, i) =>
+        row === "spacer"
+          ? "spacer"
+          : createTableRow(
+              widths!,
+              row.cells,
+              merge(cellOptions, row.options.cellOptions),
+              row.options.rowOptions,
+              borders,
+              !header && i === 0
+            ).invoke(doc, parentOptions)
       );
 
       const footerComponent = footer
         ? createTableHeaderOrFooterComponent(
             doc,
-            computedWidths,
+            widths!,
             parentOptions,
-            footer
+            cellOptions,
+            footer,
+            borders,
+            !header && rows.length === 0
           )
         : undefined;
 
