@@ -1,4 +1,4 @@
-# Painless PDF
+![painless-pdf](https://raw.githubusercontent.com/DevLeoko/painless-pdf/main/images/PainlessPDF.svg)
 
 Painless PDF is a lightweight library designed to simplify PDF generation in Node.js and the browser. Built on top of the jsPDF library, Painless PDF provides an intuitive and declarative API to create and manipulate PDF components, making it easy to design complex PDF layouts. One of its key features is the ability to dynamically detect page breaks and adjust the layout and components accordingly.
 
@@ -35,6 +35,7 @@ const helloWorldText = ppText("Hello World", {
     textColor: "green",
   })
 ```
+![code-output-01](https://raw.githubusercontent.com/DevLeoko/painless-pdf/main/images/intro-pdf-01.png)
 
 Now let us wrap this text component in a div component, which has a background, padding and border:
 ```ts
@@ -44,6 +45,7 @@ const helloWorldDiv = ppDiv(helloWorldText, {
     padding: { left: 5 },
   })
 ```
+![code-output-02](https://raw.githubusercontent.com/DevLeoko/painless-pdf/main/images/intro-pdf-02.png)
 
 To arrange multiple components together, we can use Column, Row or Table components like so:
 ```ts
@@ -57,6 +59,7 @@ ppRow([
         crossAxisAlignment: "center",
       })
 ```
+![code-output-03](https://raw.githubusercontent.com/DevLeoko/painless-pdf/main/images/intro-pdf-03.png)
 
 Now to bring it all together we construct a new PdfDocument object, which has a component as the document body and can additionally have a header and footer
 
@@ -75,6 +78,7 @@ const doc = new PdfDocument(
     }
   );
 ```
+![code-output-04](https://raw.githubusercontent.com/DevLeoko/painless-pdf/main/images/intro-pdf-04.png)
 
 Calling the `build()` function on the document give us a jsPDF document object.
 ```ts
