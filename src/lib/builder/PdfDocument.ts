@@ -23,7 +23,7 @@ export class PdfDocument {
             (this.options.header as (page: number) => PdfBlueprint)(
               page
             ).invoke(doc, {})
-        : this.options.header?.invoke(doc, {});
+        : (this.options.header as PdfBlueprint | undefined)?.invoke(doc, {});
 
     const footer =
       this.options.footer && typeof this.options.footer === "function"
@@ -31,7 +31,7 @@ export class PdfDocument {
             (this.options.footer as (page: number) => PdfBlueprint)(
               page
             ).invoke(doc, {})
-        : this.options.footer?.invoke(doc, {});
+        : (this.options.footer as PdfBlueprint | undefined)?.invoke(doc, {});
 
     let content: PdfComponent | void = new HeaderFooterComponent(
       doc,

@@ -47,7 +47,7 @@ export class ImageComponent extends PdfComponent {
     width: number,
     availableHeight: number,
     dryRun: boolean
-  ) {
+  ): { nextPage?: PdfComponent; renderedHeight: number } {
     if (availableHeight < this.getHeight(width))
       return { renderedHeight: 0, nextPage: this };
 
