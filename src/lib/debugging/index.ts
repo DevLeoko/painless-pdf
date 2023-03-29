@@ -9,60 +9,33 @@ const app = express();
 // Array from 1 to 100
 // const numbers = Array.from(Array(200).keys()).map((n) => n + 1);
 
-// const loremIpsum =
-//   `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl nec ultricies aliquam, nunc nisl aliquet nisl, eget aliquet n` +
-//   `metus nunc vel nunc. Nulla facil nisi, euismod vitae nisl nec, aliquet aliquam nunc. Nu` +
-//   ` amet, consectetur adipiscing elit. Sed euismod, nisl nec ultricies aliquam, nunc nisl`;
-
 app.get("/", (req, res) => {
   // const base64Image = fs.readFileSync("src/assets/test.png", {
   //   encoding: "base64",
   // });
 
+  const helloWorldText = ppText("Hello World", {
+    fontSize: 20,
+    textColor: "green",
+  });
+
+  // const helloWorldDiv = ppDiv(helloWorldText, {
+  //   backgroundColor: "lightgreen",
+  //   border: { width: 1, color: "black" },
+  //   padding: { left: 5 },
+  // });
+
   const doc = new PdfDocument(
-    // ppDiv(
-    //   ppColumn([
-    //     ppImage({
-    //       base64: base64Image,
-    //       fileType: "PNG",
-    //       originalWidth: 574,
-    //       originalHeight: 121,
-    //       width: 50,
-    //     }),
-    //     ppDiv(
-    //       ppRow(
-    //         [
-    //           ppDiv(ppText(loremIpsum, { fontSize: 8 }), {
-    //             backgroundColor: "red",
-    //           }),
-    //           ppDiv(ppText("Hi", { fontSize: 8 }), {
-    //             width: 10,
-    //             backgroundColor: "blue",
-    //           }),
-    //           ppDiv(ppText("Hi", { bold: true }), {
-    //             width: 10,
-    //             backgroundColor: "blue",
-    //           }),
-    //           ppDiv(ppText("Hi", { italic: true }), {
-    //             width: 10,
-    //             backgroundColor: "blue",
-    //           }),
-    //         ],
-    //         {
-    //           width: { relative: 1 },
-    //           growIndex: 0,
-    //         }
-    //       ),
-    //       {
-    //         backgroundColor: "yellow",
-    //       }
-    //     ),
-    //   ]),
-    //   { padding: 10 }
-    // ),
-    ppText("body"),
+    ppDiv(
+      ppRow([helloWorldText, ppText("Lorem"), ppText("Ipsum")], {
+        width: { relative: 1 },
+        mainAxisAlignment: "space-between",
+        crossAxisAlignment: "center",
+      }),
+      { padding: 20 }
+    ),
     {
-      header: ppDiv(ppRow([ppText("Header", { fontSize: 20 })])),
+      header: (page) => ppText(`Page ${page + 1}`, { underline: true }),
     }
   );
   const pdfOutput = doc.build().output("arraybuffer");
