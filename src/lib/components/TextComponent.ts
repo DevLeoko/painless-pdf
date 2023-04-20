@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import { PdfComponent } from "./PdfComponent";
-import { getWidth, Width } from "./component-utils";
+import { EPSILON, getWidth, Width } from "./component-utils";
 
 export type TextOptionsInput = {
   width?: Width;
@@ -103,6 +103,7 @@ export class TextComponent extends PdfComponent {
     dryRun: boolean
   ) {
     const lines = this.document.splitTextToSize(this.text, width);
+    this.applyFontStyles();
 
     const align = this.options.align;
 
@@ -116,13 +117,12 @@ export class TextComponent extends PdfComponent {
     const nextPageLines: string[] = [];
     while (
       lines.length > 0 &&
-      this.getHeightOfLines(lines.length) > availableHeight
+      this.getHeightOfLines(lines.length) > availableHeight + EPSILON
     ) {
       nextPageLines.unshift(lines.pop()!);
     }
 
     if (!dryRun) {
-      this.applyFontStyles();
       if (this.options.underline) {
         this.document.setDrawColor(this.options.textColor);
       }
