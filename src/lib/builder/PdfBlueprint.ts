@@ -24,6 +24,18 @@ export interface PdfBlueprint {
   invoke(doc: jsPDF, parentOptions: InheritedOptions): PdfComponent;
 }
 
+function mergeInheritedOptions(
+  parentOptions: InheritedOptions,
+  options: InheritedOptions
+): InheritedOptions {
+  return {
+    text: {
+      ...parentOptions.text,
+      ...options.text,
+    },
+  };
+}
+
 export function ppPageBreak() {
   return {
     invoke(doc: jsPDF) {
@@ -67,7 +79,7 @@ export function ppDiv(
     invoke(doc: jsPDF, parentOptions: InheritedOptions) {
       return new DivComponent(
         doc,
-        child.invoke(doc, { ...parentOptions, ...options }),
+        child.invoke(doc, mergeInheritedOptions(parentOptions, options)),
         options
       );
     },
@@ -83,7 +95,7 @@ export function ppRow(
       return new RowComponent(
         doc,
         children.map((child) =>
-          child.invoke(doc, { ...parentOptions, ...options })
+          child.invoke(doc, mergeInheritedOptions(parentOptions, options))
         ),
         options
       );
@@ -102,7 +114,7 @@ export function ppColumn(
         children.map((child) =>
           child === "spacer"
             ? child
-            : child.invoke(doc, { ...parentOptions, ...options })
+            : child.invoke(doc, mergeInheritedOptions(parentOptions, options))
         ),
         options
       );
@@ -303,7 +315,7 @@ export function ppTable({
 
   return {
     invoke(doc: jsPDF, parentOptions: InheritedOptions) {
-      parentOptions = { ...parentOptions, ...options };
+      parentOptions = mergeInheritedOptions(parentOptions, options);
 
       const headerComponent = header
         ? createTableHeaderOrFooterComponent(
