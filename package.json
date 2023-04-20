@@ -1,15 +1,27 @@
 {
   "name": "painless-pdf",
-  "version": "1.1.1",
+  "version": "1.1.4",
   "description": "Painless PDF generation for node and the browser",
   "repository": "https://github.com/DevLeoko/painless-pdf",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
   "module": "build/module/index.js",
+  "keywords": [
+    "pdf",
+    "layout",
+    "generation",
+    "builder",
+    "typescript",
+    "node",
+    "browser"
+  ],
   "scripts": {
     "build": "run-p build:*",
     "build:main": "tsc -p tsconfig.json",
     "build:module": "tsc -p tsconfig.module.json",
+    "build-watch": "run-p build-watch:*",
+    "build-watch:main": "tsc -p tsconfig.json --watch",
+    "build-watch:module": "tsc -p tsconfig.module.json --watch",
     "dev": "ts-node-dev --files --respawn --inspect -- src/lib/debugging/index.ts"
   },
   "license": "MIT",
