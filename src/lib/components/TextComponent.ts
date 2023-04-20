@@ -13,6 +13,7 @@ export type TextOptionsInput = {
   bold?: boolean;
   fontFamily?: string;
   underline?: boolean;
+  maxLines?: number | null;
 };
 
 export interface TextOptions {
@@ -26,6 +27,7 @@ export interface TextOptions {
   bold: boolean;
   underline: boolean;
   fontFamily: string;
+  maxLines: number | null;
 }
 
 export class TextComponent extends PdfComponent {
@@ -47,6 +49,7 @@ export class TextComponent extends PdfComponent {
     if (!options.bold) options.bold = false;
     if (!options.underline) options.underline = false;
     if (!options.fontFamily) options.fontFamily = "helvetica";
+    if (!options.maxLines) options.maxLines = null;
     this.options = options as TextOptions;
   }
 
@@ -78,7 +81,14 @@ export class TextComponent extends PdfComponent {
   public getHeight(width: number): number {
     this.applyFontStyles();
     const lines = this.document.splitTextToSize(this.text, width);
-    return this.getHeightOfLines(lines.length);
+
+    let lineCount = lines.length;
+
+    if (this.options.maxLines !== null) {
+      lineCount = Math.min(lineCount, this.options.maxLines);
+    }
+
+    return this.getHeightOfLines(lineCount);
   }
 
   private getHeightOfLines(numLines: number) {
@@ -95,6 +105,31 @@ export class TextComponent extends PdfComponent {
     this.document.setFont(this.options.fontFamily, style || "normal");
   }
 
+  private mergeLines(fittingLine: string, cutoffLine: string, width: number) {
+    // The width in the pdfjs library is relative to the font size
+    width = this.document.internal.scaleFactor * width / this.document.getFontSize()
+
+    fittingLine += " ";
+    const cutoffWord = cutoffLine.split(" ").pop()!;
+
+    const charWidths = this.document.getCharWidthsArray(cutoffLine);
+    let lastLineWith = this.document
+      .getCharWidthsArray(fittingLine)
+      .reduce((a, b) => a + b, 0);
+
+    // Add as many chars from the cutoff word as possible to the last line without exceeding the width
+    for (let i = 0; i < cutoffWord.length; i++) {
+      const charWidth = charWidths[i];
+      if (lastLineWith + charWidth > width) {
+        break;
+      }
+      fittingLine += cutoffWord[i];
+      lastLineWith += charWidth;
+    }
+
+    return fittingLine;
+  }
+
   public render(
     x: number,
     y: number,
@@ -102,8 +137,20 @@ export class TextComponent extends PdfComponent {
     availableHeight: number,
     dryRun: boolean
   ) {
-    const lines = this.document.splitTextToSize(this.text, width);
     this.applyFontStyles();
+
+    const lines = this.document.splitTextToSize(this.text, width) as string[];
+
+    if (
+      this.options.maxLines !== null &&
+      lines.length > this.options.maxLines
+    ) {
+      lines[this.options.maxLines - 1] = this.mergeLines(
+        lines[this.options.maxLines - 1],
+        lines[this.options.maxLines],
+        width
+      )
+    }
 
     const align = this.options.align;
 
