@@ -38,7 +38,10 @@ app.get("/", (req, res) => {
       header: (page) => ppText(`Page ${page + 1}`, { underline: true }),
     }
   );
-  const pdfOutput = doc.build().output("arraybuffer");
+
+  doc.build();
+
+  const pdfOutput = doc.getJsPdf().output("arraybuffer");
   res.contentType("application/pdf");
   const buff = Buffer.from(pdfOutput as any, "ascii");
   res.send(buff);

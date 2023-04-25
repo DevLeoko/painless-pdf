@@ -96,13 +96,13 @@ const pdfBuffer = jsPdfDoc.output("arraybuffer");
 new PdfDocument(
   blueprint: PdfBlueprint,
   options: {
-    header?: PdfBlueprint | ((page: number) => PdfBlueprint);
-    footer?: PdfBlueprint | ((page: number) => PdfBlueprint);
+    header?: PdfBlueprint | ((page: number, totalPages: number) => PdfBlueprint);
+    footer?: PdfBlueprint | ((page: number, totalPages: number) => PdfBlueprint);
   }
 )
 ```
 
-Creates a PDF document from a component. A header or footer can be supplied as either static components or callbacks which get passed the current page number (starting at 0). The header will be placed on top of each page and the footer at the bottom.
+Creates a PDF document from a component. A header or footer can be supplied as either static components or callbacks which get passed the current page number (starting at 0) and the number of pages. The header will be placed on top of each page and the footer at the bottom.
 
 Calling the `build()` function on the document give us a jsPDF document object.
 
