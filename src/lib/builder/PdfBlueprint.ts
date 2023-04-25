@@ -25,13 +25,13 @@ export interface PdfBlueprint {
 }
 
 function mergeInheritedOptions(
-  parentOptions: InheritedOptions,
-  options: InheritedOptions
+  parentOptions?: InheritedOptions,
+  options?: InheritedOptions
 ): InheritedOptions {
   return {
     text: {
-      ...parentOptions.text,
-      ...options.text,
+      ...parentOptions?.text,
+      ...options?.text,
     },
   };
 }
