@@ -20,6 +20,10 @@ export interface InheritedOptions {
   text?: TextOptionsInput;
 }
 
+export interface DivWrapperOptions {
+  div?: DivOptionsInput & InheritedOptions;
+}
+
 export interface PdfBlueprint {
   invoke(doc: jsPDF, parentOptions: InheritedOptions): PdfComponent;
 }
@@ -44,7 +48,13 @@ export function ppPageBreak() {
   };
 }
 
-export function ppText(text: string, options?: TextOptionsInput): PdfBlueprint {
+export function ppText(
+  text: string,
+  options?: TextOptionsInput & DivWrapperOptions
+): PdfBlueprint {
+  if (options?.div)
+    return ppDiv(ppText(text, { ...options, div: undefined }), options.div);
+
   return {
     invoke(doc: jsPDF, parentOptions: InheritedOptions) {
       return new TextComponent(doc, text, {
@@ -88,8 +98,11 @@ export function ppDiv(
 
 export function ppRow(
   children: PdfBlueprint[],
-  options: RowOptionsInput & InheritedOptions = {}
+  options: RowOptionsInput & InheritedOptions & DivWrapperOptions = {}
 ): PdfBlueprint {
+  if (options?.div)
+    return ppDiv(ppRow(children, { ...options, div: undefined }), options.div);
+
   return {
     invoke(doc: jsPDF, parentOptions: InheritedOptions) {
       return new RowComponent(
@@ -105,8 +118,14 @@ export function ppRow(
 
 export function ppColumn(
   children: (PdfBlueprint | "spacer")[],
-  options: ColumnOptionsInput & InheritedOptions = {}
+  options: ColumnOptionsInput & InheritedOptions & DivWrapperOptions = {}
 ): PdfBlueprint {
+  if (options?.div)
+    return ppDiv(
+      ppColumn(children, { ...options, div: undefined }),
+      options.div
+    );
+
   return {
     invoke(doc: jsPDF, parentOptions: InheritedOptions) {
       return new ColumnComponent(
@@ -272,6 +291,7 @@ export function ppTable({
   options,
   borders,
   cellOptions,
+  div,
 }: {
   header?: TableHeaderBlueprint;
   rows: (TableRowBlueprint | "spacer")[];
@@ -280,7 +300,22 @@ export function ppTable({
   options?: InheritedOptions;
   cellOptions?: DivOptionsInput;
   borders?: TableBorderOptions;
+  div?: DivOptionsInput;
 }): PdfBlueprint {
+  if (div)
+    return ppDiv(
+      ppTable({
+        header,
+        rows,
+        widths,
+        footer,
+        options,
+        borders,
+        cellOptions,
+      }),
+      div
+    );
+
   if (rows[0] == "spacer") throw new Error("First row cannot be a spacer");
 
   let numCols = header?.cells?.length ?? rows[0]?.cells.length ?? 0;

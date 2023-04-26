@@ -116,6 +116,18 @@ Most widths can also be defined relative to their parents width (0-1). Omitting 
 type Width = number | { relative: number };
 ```
 
+### _div_ option
+
+Most component functions also support a `div` option within their `options` parameter. Specifying this property will cause the component to be wrapped in a `ppDiv` component with the specified div options.
+
+So 
+```ts 
+ppDiv(ppText("foo"), { backgroundColor: 'red' })
+``` 
+is equivalent to 
+```ts 
+ppText("foo", { div: { backgroundColor: 'red' } })
+```
 
 ### ppText
 ```ts
@@ -132,6 +144,7 @@ ppText(
     bold?: boolean;
     fontFamily?: string;
     underline?: boolean;
+    div?: DivOptions;
   }
 )
 ```
@@ -224,6 +237,7 @@ ppRow(
     crossAxisAlignment?: "top" | "center" | "bottom" | "stretch";
     growIndex?: number;
     text?: TextOptions;
+    div?: DivOptions;
   }
 )
 ```
@@ -244,6 +258,7 @@ ppColumn(
     width?: Width;
     keepTogether?: boolean;
     text?: TextOptions;
+    div?: DivOptions;
   }
 )
 ```
@@ -269,6 +284,7 @@ ppTable(
       verticalWidth: number | number[];
       horizontalWidth: number;
     };
+    div?: DivOptions;
   }
 )
 ```
