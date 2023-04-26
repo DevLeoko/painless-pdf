@@ -71,10 +71,7 @@ export class HeaderFooterComponent extends PdfComponent {
       };
     }
 
-    const childAvailableHeight =
-      availableHeight -
-      headerHeight -
-      (this.options.footerAtBottom ? 0 : footerHeight);
+    const childAvailableHeight = availableHeight - headerHeight - footerHeight;
 
     const childY = y + headerHeight;
     const childRenderResult = this.child.apply(
