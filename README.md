@@ -80,9 +80,11 @@ const doc = new PdfDocument(
 ```
 ![code-output-04](https://raw.githubusercontent.com/DevLeoko/painless-pdf/main/images/intro-pdf-04.png)
 
-Calling the `build()` function on the document give us a jsPDF document object.
+Calling the `build()` function on the document applies the components to the PDF.  We can then get the jsPDF object rhough `getJsPdf()`
 ```ts
-const jsPdfDoc = doc.build()
+doc.build();
+
+const jsPdfDoc = doc.getJsPdf();
 const pdfBuffer = jsPdfDoc.output("arraybuffer");
 ```
 
