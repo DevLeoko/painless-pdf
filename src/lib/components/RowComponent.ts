@@ -122,7 +122,8 @@ export class RowComponent extends PdfComponent {
         });
       case "space-between":
         return childWidth.map((w, pos) => {
-          const x = currentX + (pos * diff) / (childWidth.length - 1);
+          const x =
+            currentX + (pos * diff) / Math.max(1, childWidth.length - 1);
           currentX += w;
           return x;
         });
