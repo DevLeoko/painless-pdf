@@ -21,7 +21,7 @@ export class ImageComponent extends PdfComponent {
     this.aspectRatio = options.originalWidth / options.originalHeight;
 
     if (!this.options.width && !this.options.height) {
-      this.options.width = 50;
+      this.options.width = 30;
     }
   }
 
@@ -37,7 +37,7 @@ export class ImageComponent extends PdfComponent {
     if (this.options.height) {
       return this.options.height;
     } else {
-      return width / this.aspectRatio;
+      return this.options.width! / this.aspectRatio;
     }
   }
 
