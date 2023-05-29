@@ -1,7 +1,9 @@
 import jsPDF, { DocumentProperties } from "jspdf";
 import { HeaderFooterComponent } from "../components/HeaderFooterComponent";
 import { PdfComponent } from "../components/PdfComponent";
-import { PdfBlueprint } from "./PdfBlueprint";
+import { InheritedOptions, PdfBlueprint } from "./PdfBlueprint";
+import { DivOptionsInput } from "../components/DivOptions";
+import { DivComponent } from "../components/DivComponent";
 
 export class PdfDocument {
   private doc: jsPDF;
@@ -16,6 +18,7 @@ export class PdfDocument {
         | PdfBlueprint
         | ((page: number, totalPages: number) => PdfBlueprint);
       format?: string | [number, number];
+      page?: { div?: DivOptionsInput } & InheritedOptions;
     } = {}
   ) {
     this.doc = new jsPDF({ format: options.format });
@@ -29,8 +32,11 @@ export class PdfDocument {
               page: number,
               totalPages: number
             ) => PdfBlueprint
-          )(page, totalPages).invoke(this.doc, {})
-      : (this.options.header as PdfBlueprint | undefined)?.invoke(this.doc, {});
+          )(page, totalPages).invoke(this.doc, this.options.page || {})
+      : (this.options.header as PdfBlueprint | undefined)?.invoke(
+          this.doc,
+          this.options.page || {}
+        );
   }
 
   private buildFooterComponent(totalPages: number) {
@@ -41,8 +47,11 @@ export class PdfDocument {
               page: number,
               totalPages: number
             ) => PdfBlueprint
-          )(page, totalPages).invoke(this.doc, {})
-      : (this.options.footer as PdfBlueprint | undefined)?.invoke(this.doc, {});
+          )(page, totalPages).invoke(this.doc, this.options.page || {})
+      : (this.options.footer as PdfBlueprint | undefined)?.invoke(
+          this.doc,
+          this.options.page || {}
+        );
   }
 
   private render(
@@ -82,15 +91,21 @@ export class PdfDocument {
   }
 
   private buildPageComponent(component: PdfComponent, totalPages: number) {
-    return new HeaderFooterComponent(this.doc, component, {
+    const headerFooter = new HeaderFooterComponent(this.doc, component, {
       footer: this.buildFooterComponent(totalPages),
       header: this.buildHeaderComponent(totalPages),
       footerAtBottom: true,
     });
+
+    if (this.options.page?.div) {
+      return new DivComponent(this.doc, headerFooter, this.options.page.div);
+    }
+
+    return headerFooter;
   }
 
   build(pageLimit: number = 100) {
-    const component = this.blueprint.invoke(this.doc, {});
+    const component = this.blueprint.invoke(this.doc, this.options.page || {});
 
     let totalPages = 1;
     // If header or footer is defined as a function, we need to calculate the total number of pages
