@@ -129,6 +129,17 @@ export class PdfDocument {
     this.doc.setProperties(info);
   }
 
+  addFont(font: {
+    family: string;
+    style: string;
+    weight: string;
+    base64: string;
+  }) {
+    const id = `font_${font.family}_${font.style}_${font.weight}`;
+    this.doc.addFileToVFS(id, font.base64);
+    this.doc.addFont(id, font.family, font.style, font.weight);
+  }
+
   getJsPdf() {
     return this.doc;
   }
