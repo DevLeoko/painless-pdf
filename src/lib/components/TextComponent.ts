@@ -12,6 +12,7 @@ export type TextOptionsInput = {
   italic?: boolean;
   bold?: boolean;
   fontFamily?: string;
+  fontWeight?: number;
   underline?: boolean;
   maxLines?: number | null;
 };
@@ -27,6 +28,7 @@ export interface TextOptions {
   bold: boolean;
   underline: boolean;
   fontFamily: string;
+  fontWeight?: number;
   maxLines: number | null;
 }
 
@@ -99,15 +101,21 @@ export class TextComponent extends PdfComponent {
     this.document.setLineHeightFactor(this.options.lineHeightFactor);
     this.document.setFontSize(this.options.fontSize);
     this.document.setTextColor(this.options.textColor);
-    let style = "";
-    if (this.options.bold) style += "bold";
-    if (this.options.italic) style += "italic";
-    this.document.setFont(this.options.fontFamily, style || "normal");
+    // let style = "";
+    // if (this.options.bold) style += "bold";
+    // if (this.options.italic) style += "italic";
+    this.document.setFont(
+      this.options.fontFamily,
+      this.options.italic ? "italic" : "normal",
+      this.options.bold ? "bold" : this.options.fontWeight || "normal"
+    );
   }
 
   private mergeLines(fittingLine: string, cutoffLine: string, width: number) {
     // The width in the pdfjs library is relative to the font size
-    width = this.document.internal.scaleFactor * width / this.document.getFontSize()
+    width =
+      (this.document.internal.scaleFactor * width) /
+      this.document.getFontSize();
 
     fittingLine += " ";
     const cutoffWord = cutoffLine.split(" ").pop()!;
@@ -149,7 +157,7 @@ export class TextComponent extends PdfComponent {
         lines[this.options.maxLines - 1],
         lines[this.options.maxLines],
         width
-      )
+      );
     }
 
     const align = this.options.align;
