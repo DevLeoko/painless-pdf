@@ -51,7 +51,7 @@ export class HeaderFooterComponent extends PdfComponent {
     }
   }
 
-  public render(
+  public async render(
     x: number,
     y: number,
     width: number,
@@ -74,7 +74,7 @@ export class HeaderFooterComponent extends PdfComponent {
     const childAvailableHeight = availableHeight - headerHeight - footerHeight;
 
     const childY = y + headerHeight;
-    const childRenderResult = this.child.apply(
+    const childRenderResult = await this.child.apply(
       x,
       childY,
       childAvailableHeight,
@@ -92,7 +92,7 @@ export class HeaderFooterComponent extends PdfComponent {
     }
 
     if (header) {
-      header.apply(x, y, headerHeight, width, dryRun);
+      await header.apply(x, y, headerHeight, width, dryRun);
     }
 
     if (footer) {
@@ -100,7 +100,7 @@ export class HeaderFooterComponent extends PdfComponent {
         ? y + availableHeight - footerHeight
         : childY + childRenderResult.renderedHeight;
 
-      footer.apply(x, footerY, footerHeight, width, dryRun);
+      await footer.apply(x, footerY, footerHeight, width, dryRun);
     }
 
     return {

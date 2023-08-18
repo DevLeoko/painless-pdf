@@ -15,6 +15,7 @@ import {
   SizedBoxOptions,
 } from "../components/SizedBoxComponent";
 import { TextComponent, TextOptionsInput } from "../components/TextComponent";
+import { SvgComponent, SvgOptions } from "../components/SvgComponent";
 
 export interface InheritedOptions {
   text?: TextOptionsInput;
@@ -69,6 +70,14 @@ export function ppImage(options: ImageOptions) {
   return {
     invoke(doc: jsPDF) {
       return new ImageComponent(doc, options);
+    },
+  };
+}
+
+export function ppSvg(options: SvgOptions) {
+  return {
+    invoke(doc: jsPDF) {
+      return new SvgComponent(doc, options);
     },
   };
 }

@@ -30,7 +30,12 @@ export class SizedBoxComponent extends PdfComponent {
     return this.options.height ?? 0;
   }
 
-  public render(x: number, y: number, width: number, availableHeight: number) {
+  public async render(
+    x: number,
+    y: number,
+    width: number,
+    availableHeight: number
+  ) {
     // No rendering needed for SizedBoxComponent as it's just an empty space
     return {
       renderedHeight: Math.min(availableHeight, this.getHeight(width)),

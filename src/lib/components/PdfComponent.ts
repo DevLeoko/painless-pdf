@@ -1,5 +1,7 @@
 import jsPDF from "jspdf";
 
+export type RenderResult = { nextPage?: PdfComponent; renderedHeight: number };
+
 export abstract class PdfComponent {
   protected document: jsPDF;
 
@@ -19,9 +21,9 @@ export abstract class PdfComponent {
     availableHeight: number,
     dryRun: boolean,
     fillHeight: boolean
-  ): { nextPage?: PdfComponent; renderedHeight: number };
+  ): Promise<RenderResult>;
 
-  public apply(
+  public async apply(
     x: number,
     y: number,
     availableHeight: number,
@@ -38,6 +40,6 @@ export abstract class PdfComponent {
       width = Math.min(width, maxWidth);
     }
 
-    return this.render(x, y, width, availableHeight, dryRun, fillHeight);
+    return await this.render(x, y, width, availableHeight, dryRun, fillHeight);
   }
 }

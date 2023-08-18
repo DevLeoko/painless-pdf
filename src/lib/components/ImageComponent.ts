@@ -41,13 +41,13 @@ export class ImageComponent extends PdfComponent {
     }
   }
 
-  public render(
+  public async render(
     x: number,
     y: number,
     width: number,
     availableHeight: number,
     dryRun: boolean
-  ): { nextPage?: PdfComponent; renderedHeight: number } {
+  ): Promise<{ nextPage?: PdfComponent; renderedHeight: number }> {
     if (availableHeight < this.getHeight(width))
       return { renderedHeight: 0, nextPage: this };
 

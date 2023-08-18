@@ -52,7 +52,7 @@ export class DivComponent extends PdfComponent {
     return this.child.getHeight(width - this.selfWidth) + this.selfHeight;
   }
 
-  public render(
+  public async render(
     x: number,
     y: number,
     width: number,
@@ -77,7 +77,7 @@ export class DivComponent extends PdfComponent {
       };
     }
 
-    const childRenderResult = this.child.apply(
+    const childRenderResult = await this.child.apply(
       childX,
       childY,
       childAvailableHeight,
@@ -140,7 +140,7 @@ export class DivComponent extends PdfComponent {
         this.document.line(bX, y, bX, y + height);
       }
 
-      this.child.apply(
+      await this.child.apply(
         childX,
         childY,
         childAvailableHeight,

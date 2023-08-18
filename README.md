@@ -82,7 +82,7 @@ const doc = new PdfDocument(
 
 Calling the `build()` function on the document applies the components to the PDF.  We can then get the jsPDF object rhough `getJsPdf()`
 ```ts
-doc.build();
+await doc.build();
 
 const jsPdfDoc = doc.getJsPdf();
 const pdfBuffer = jsPdfDoc.output("arraybuffer");
@@ -172,6 +172,17 @@ In NodeJS, you can get the base64 image data like so:
 const base64Image = fs.readFileSync("src/assets/test.png", { encoding: "base64" });
 ```
 
+
+### ppSvg
+```ts
+ppSvg(options: {
+  svg: string;
+  width?: number;
+  height?: number;
+})
+```
+
+The svg string should be a valid svg string, not a path to a file. Provide either a width or a height, the other dimension will be scaled accordingly.
 
 ### ppSizedBox
 ```ts

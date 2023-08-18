@@ -136,7 +136,7 @@ export class RowComponent extends PdfComponent {
     }
   }
 
-  public render(
+  public async render(
     x: number,
     y: number,
     width: number,
@@ -164,11 +164,13 @@ export class RowComponent extends PdfComponent {
     );
     const horizontalAlignment = this.options.crossAxisAlignment ?? "top";
 
-    this.children.forEach((c, pos) => {
+    for (let pos = 0; pos < this.children.length; pos++) {
+      const child = this.children[pos];
+
       const childX = x + childXs[pos];
       // TODO: childHeight can exceed availableHeight for now. (treated similar to keepTogether = true)
       // Wrapping logic should be implemented but is not trivial. (e.g. cells should be at same x in wrapped row)
-      const childHeight = c.getHeight(fittedWidth[pos]);
+      const childHeight = child.getHeight(fittedWidth[pos]);
       const childWidth = fittedWidth[pos];
       let childY = y;
       switch (horizontalAlignment) {
@@ -183,7 +185,7 @@ export class RowComponent extends PdfComponent {
           childY = y + height - childHeight;
       }
 
-      c.render(
+      child.render(
         childX,
         childY,
         childWidth,
@@ -191,7 +193,7 @@ export class RowComponent extends PdfComponent {
         dryRun,
         horizontalAlignment == "stretch"
       );
-    });
+    }
 
     return {
       renderedHeight: height,

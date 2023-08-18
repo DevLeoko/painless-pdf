@@ -138,7 +138,7 @@ export class TextComponent extends PdfComponent {
     return fittingLine;
   }
 
-  public render(
+  public async render(
     x: number,
     y: number,
     width: number,

@@ -1,6 +1,6 @@
 import jsPDF, { DocumentProperties } from "jspdf";
 import { HeaderFooterComponent } from "../components/HeaderFooterComponent";
-import { PdfComponent } from "../components/PdfComponent";
+import { PdfComponent, RenderResult } from "../components/PdfComponent";
 import { InheritedOptions, PdfBlueprint } from "./PdfBlueprint";
 import { DivOptionsInput } from "../components/DivOptions";
 import { DivComponent } from "../components/DivComponent";
@@ -54,20 +54,24 @@ export class PdfDocument {
         );
   }
 
-  private render(
+  private async render(
     content: PdfComponent,
     dryRun: boolean,
     pageLimit: number = 100
-  ): number {
+  ): Promise<number> {
     const { width, height } = this.doc.internal.pageSize;
 
     let lastContent: PdfComponent | void = content;
 
     let page = 1;
     do {
-      const renderResult: ReturnType<
-        (typeof PdfComponent)["prototype"]["apply"]
-      > = lastContent.apply(0, 0, height, width, dryRun);
+      const renderResult: RenderResult = await lastContent.apply(
+        0,
+        0,
+        height,
+        width,
+        dryRun
+      );
 
       lastContent = renderResult.nextPage;
       if (lastContent) {
@@ -104,7 +108,7 @@ export class PdfDocument {
     return headerFooter;
   }
 
-  build(pageLimit: number = 100) {
+  async build(pageLimit: number = 100) {
     const component = this.blueprint.invoke(this.doc, this.options.page || {});
 
     let totalPages = 1;
@@ -114,11 +118,11 @@ export class PdfDocument {
       typeof this.options.footer === "function"
     ) {
       let dryRunContent = this.buildPageComponent(component, 1);
-      totalPages = this.render(dryRunContent, true, pageLimit);
+      totalPages = await this.render(dryRunContent, true, pageLimit);
     }
 
     let content = this.buildPageComponent(component, totalPages);
-    this.render(content, false, pageLimit);
+    await this.render(content, false, pageLimit);
   }
 
   setTitle(title: string) {

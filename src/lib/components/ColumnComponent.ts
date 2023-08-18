@@ -62,7 +62,7 @@ export class ColumnComponent extends PdfComponent {
     }
   }
 
-  public render(
+  public async render(
     x: number,
     y: number,
     width: number,
@@ -108,7 +108,7 @@ export class ColumnComponent extends PdfComponent {
 
       let childX = this.getChildX(x, width, childWidth);
 
-      const childRenderResult = child.apply(
+      const childRenderResult = await child.apply(
         childX,
         y + addY,
         availableHeight - addY,
