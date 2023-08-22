@@ -185,7 +185,8 @@ export class RowComponent extends PdfComponent {
           childY = y + height - childHeight;
       }
 
-      child.render(
+      // TODO: Check why this uses #render not #apply
+      await child.render(
         childX,
         childY,
         childWidth,
