@@ -2,13 +2,15 @@ import jsPDF from "jspdf";
 import { PdfComponent } from "./PdfComponent";
 // import { Canvg } from "canvg";
 import { JSDOM } from "jsdom";
-import "svg2pdf.js";
+import "@leoko/svg2pdf.js";
 
 export interface SvgOptions {
   svg: string;
   width?: number;
   height?: number;
 }
+
+const DUMMY_DOM = new JSDOM();
 
 export class SvgComponent extends PdfComponent {
   private options: SvgOptions;
@@ -27,6 +29,13 @@ export class SvgComponent extends PdfComponent {
 
     const originalWidth = svgElement.getAttribute("width");
     const originalHeight = svgElement.getAttribute("height");
+
+    if (!svgElement.hasAttribute("viewBox")) {
+      svgElement.setAttribute(
+        "viewBox",
+        `0 0 ${originalWidth} ${originalHeight}`
+      );
+    }
 
     this.aspectRatio = Number(originalWidth) / Number(originalHeight);
 
@@ -64,30 +73,14 @@ export class SvgComponent extends PdfComponent {
     if (!dryRun) {
       const height = this.getHeight(width);
 
+      // @ts-ignore
+      global.document = DUMMY_DOM.window.document;
+
+      // @ts-ignore
       const element = this.svgDom.window.document.documentElement;
 
       // @ts-ignore
-      global.document = this.svgDom.window.document;
-
-      console.log(element);
-
-      // @ts-ignore
       await this.document.svg(element!, { x, y, width, height });
-
-      // const canvas = this.document.canvas;
-      // canvas.width = width;
-      // canvas.height = height;
-
-      // const ctx = canvas.getContext("2d");
-
-      // // @ts-ignore
-      // const canvg = Canvg.fromString(ctx, this.options.svg, {
-      //   DOMParser,
-      // });
-      // canvg.render({
-      //   offsetX: x,
-      //   offsetY: y,
-      // });
     }
 
     return { renderedHeight: this.getHeight(width) };
