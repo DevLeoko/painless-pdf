@@ -159,13 +159,17 @@ The text will break automatically according to the defined/available width.
 ```ts
 ppImage(options: {
   base64: string;
-  fileType: "JPEG" | "PNG";
-  originalWidth: number;
-  originalHeight: number;
-  width?: number;
+  width?: Width;
   height?: number;
+  maxWidth?: Width;
+  maxHeight?: number;
 })
 ```
+
+Either `width` or `height` should be specified. The other dimension will be scaled accordingly.
+If `width` is specified, `maxHeight` can be used to limit the computed height of the image. If `height` is specified, `maxWidth` can be used to limit the computed width of the image.
+
+The image will never be stretched. An image will never break between pages (tough it can be shifted to the next page) so it must not be higher than the available page height.
 
 In NodeJS, you can get the base64 image data like so:
 ```ts
