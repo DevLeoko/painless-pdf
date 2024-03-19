@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
-import { PdfComponent } from "./PdfComponent";
 import { getWidth, Width } from "./component-utils";
+import { PdfComponent, RenderResult } from "./PdfComponent";
+import { SizedBoxComponent } from "./SizedBoxComponent";
 
 type MainAxisAlignment =
   | "start"
@@ -16,6 +17,7 @@ export interface RowOptionsInput {
   mainAxisAlignment?: MainAxisAlignment;
   crossAxisAlignment?: CrossAxisAlignment;
   growIndex?: number;
+  keepTogether?: boolean;
 }
 
 interface RowOptions {
@@ -23,6 +25,7 @@ interface RowOptions {
   mainAxisAlignment: MainAxisAlignment;
   crossAxisAlignment: CrossAxisAlignment;
   growIndex?: number;
+  keepTogether: boolean;
 }
 
 export class RowComponent extends PdfComponent {
@@ -31,27 +34,33 @@ export class RowComponent extends PdfComponent {
   constructor(
     document: jsPDF,
     private children: PdfComponent[],
-    options: RowOptionsInput = {}
+    options: RowOptionsInput = {},
+    private previousChildXs?: number[]
   ) {
-    super(document, true);
+    super(document, options.keepTogether ?? true);
 
     if (!options.mainAxisAlignment) options.mainAxisAlignment = "start";
     if (!options.crossAxisAlignment) options.crossAxisAlignment = "top";
+    if (options.keepTogether == undefined) options.keepTogether = true;
     this.options = options as RowOptions;
   }
 
+  // Fit the requested widths of the children fairly into the available container width
   private fitChildrenToWidth(childrenWidth: number[], width: number): number[] {
     const totalWidth = childrenWidth.reduce((acc, w) => acc + w, 0);
     if (totalWidth <= width) {
+      // Give remaining space to growIndex
       if (this.options.growIndex !== undefined)
         childrenWidth[this.options.growIndex] += width - totalWidth;
 
       return childrenWidth;
     }
 
+    // Children are requesting more than the available width
     let children = childrenWidth.map((width, pos) => ({ width, pos }));
     const newWidths: (number | null)[] = childrenWidth.map(() => null);
 
+    // We will first grant each child that requests less than the equalWidth its requested width
     let equalWidth = width / children.length;
     while (newWidths.includes(null)) {
       const childrenWithLessWidth = children.filter(
@@ -65,9 +74,12 @@ export class RowComponent extends PdfComponent {
       });
 
       if (childrenWithLessWidth.length === 0) break;
+
+      // Equal width might change if requested width was less than equalWidth
       equalWidth = width / children.length;
     }
 
+    // Remaining greedy children will get equalWidth
     return newWidths.map((w) => w ?? equalWidth);
   }
 
@@ -97,6 +109,10 @@ export class RowComponent extends PdfComponent {
     childWidth: number[],
     alignment: MainAxisAlignment
   ) {
+    if (this.previousChildXs) {
+      return this.previousChildXs;
+    }
+
     const totalWidth = childWidth.reduce((acc, w) => acc + w, 0);
     const diff = width - totalWidth;
 
@@ -143,7 +159,7 @@ export class RowComponent extends PdfComponent {
     availableHeight: number,
     dryRun: boolean,
     fillHeight: boolean
-  ) {
+  ): Promise<RenderResult> {
     if (this.children.length === 0) return { renderedHeight: 0 };
 
     const childrenWidth = this.children.map((c) => c.getPreferredWidth(width));
@@ -166,11 +182,22 @@ export class RowComponent extends PdfComponent {
     );
     const horizontalAlignment = this.options.crossAxisAlignment ?? "top";
 
+    const nextPageItems: (PdfComponent | null)[] = [];
     for (let pos = 0; pos < this.children.length; pos++) {
       const child = this.children[pos];
 
       const childX = x + childXs[pos];
       const childHeight = child.getHeight(fittedWidth[pos], availableHeight);
+
+      if (availableHeight < childHeight) {
+        if (child.keepTogether) {
+          nextPageItems.push(child);
+          continue;
+        } else {
+          height = availableHeight;
+        }
+      }
+
       const childWidth = fittedWidth[pos];
       let childY = y;
       switch (horizontalAlignment) {
@@ -186,18 +213,32 @@ export class RowComponent extends PdfComponent {
       }
 
       // TODO: Check why this uses #render not #apply
-      await child.render(
+      const renderResult = await child.render(
         childX,
         childY,
         childWidth,
-        horizontalAlignment == "stretch" ? height : childHeight,
+        availableHeight,
         dryRun,
         horizontalAlignment == "stretch"
       );
+
+      nextPageItems.push(renderResult.nextPage ?? null);
     }
+
+    const hasNextPageItems = nextPageItems.some((i) => i !== null);
 
     return {
       renderedHeight: height,
+      nextPage: hasNextPageItems
+        ? new RowComponent(
+            this.document,
+            nextPageItems.map(
+              (i) => i ?? new SizedBoxComponent(this.document, {})
+            ),
+            this.options,
+            childXs
+          )
+        : undefined,
     };
   }
 }
