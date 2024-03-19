@@ -43,9 +43,13 @@ export class ColumnComponent extends PdfComponent {
   public getHeight(width: number): number {
     if (this.children.length === 0) return 0;
 
-    const childrenHeight = this.children
-      .filter((c) => c != "spacer")
-      .map((c) => (c as PdfComponent).getHeight(width));
+    const componentChildren = this.children.filter(
+      (c) => c != "spacer"
+    ) as PdfComponent[];
+
+    const childrenHeight = componentChildren.map((c) =>
+      c.getHeight(c.getPreferredWidth(width))
+    );
     return childrenHeight.reduce((acc, h) => acc + h, 0);
   }
 
