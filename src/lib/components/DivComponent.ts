@@ -117,7 +117,19 @@ export class DivComponent extends PdfComponent {
           this.options.border.top.width -
           this.options.border.bottom.width;
         this.document.setFillColor(this.options.backgroundColor);
-        this.document.rect(bgX, bgY, bgWidth, bgHeight, "F");
+        if (this.options.borderRadius) {
+          this.document.roundedRect(
+            bgX,
+            bgY,
+            bgWidth,
+            bgHeight,
+            this.options.borderRadius,
+            this.options.borderRadius,
+            "F"
+          );
+        } else {
+          this.document.rect(bgX, bgY, bgWidth, bgHeight, "F");
+        }
       }
 
       if (this.options.border.top.width) {

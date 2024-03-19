@@ -20,6 +20,7 @@ export interface DivOptionsInput {
         left?: BorderOptions;
       }
     | BorderOptions;
+  borderRadius?: number;
   keepTogether?: boolean;
 }
 
@@ -33,6 +34,7 @@ export interface DivOptions {
     bottom: BorderOptions;
     left: BorderOptions;
   };
+  borderRadius: number;
   keepTogether?: boolean;
 }
 
@@ -100,6 +102,7 @@ export function transformInputOptions(options?: DivOptionsInput): DivOptions {
   return {
     backgroundColor: options?.backgroundColor,
     width: options?.width,
+    borderRadius: options?.borderRadius || 0,
     padding,
     border,
   };
