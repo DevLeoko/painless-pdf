@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
-import { PdfComponent } from "./PdfComponent";
 import { getWidth, Width } from "./component-utils";
+import { PdfComponent, RenderResult } from "./PdfComponent";
 
 export interface SizedBoxOptions {
   height?: number | "max";
@@ -23,9 +23,8 @@ export class SizedBoxComponent extends PdfComponent {
     }
   }
 
-  public getHeight(width: number): number {
-    if (this.options.height === "max")
-      return this.document.internal.pageSize.height;
+  public getHeight(width: number, availableHeight: number): number {
+    if (this.options.height === "max") return availableHeight;
 
     return this.options.height ?? 0;
   }
@@ -35,10 +34,13 @@ export class SizedBoxComponent extends PdfComponent {
     y: number,
     width: number,
     availableHeight: number
-  ) {
+  ): Promise<RenderResult> {
     // No rendering needed for SizedBoxComponent as it's just an empty space
     return {
-      renderedHeight: Math.min(availableHeight, this.getHeight(width)),
+      renderedHeight: Math.min(
+        availableHeight,
+        this.getHeight(width, availableHeight)
+      ),
     };
   }
 }

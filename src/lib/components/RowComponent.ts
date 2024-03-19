@@ -82,12 +82,12 @@ export class RowComponent extends PdfComponent {
     }
   }
 
-  public getHeight(width: number): number {
+  public getHeight(width: number, availableHeight: number): number {
     const childrenWidth = this.children.map((c) => c.getPreferredWidth(width));
     const fittedWidth = this.fitChildrenToWidth(childrenWidth, width);
 
     const childrenHeight = this.children.map((c, pos) =>
-      c.getHeight(fittedWidth[pos])
+      c.getHeight(fittedWidth[pos], availableHeight)
     );
     return Math.max(...childrenHeight);
   }
@@ -150,12 +150,14 @@ export class RowComponent extends PdfComponent {
     const fittedWidth = this.fitChildrenToWidth(childrenWidth, width);
 
     const childrenHeight = this.children.map((c, pos) =>
-      c.getHeight(fittedWidth[pos])
+      c.getHeight(fittedWidth[pos], availableHeight)
     );
     let height = Math.max(...childrenHeight);
     if (fillHeight) {
-      height = Math.max(height, availableHeight);
+      height = availableHeight;
     }
+
+    height = Math.min(height, availableHeight);
 
     const childXs = this.computeChildXs(
       width,
@@ -168,9 +170,7 @@ export class RowComponent extends PdfComponent {
       const child = this.children[pos];
 
       const childX = x + childXs[pos];
-      // TODO: childHeight can exceed availableHeight for now. (treated similar to keepTogether = true)
-      // Wrapping logic should be implemented but is not trivial. (e.g. cells should be at same x in wrapped row)
-      const childHeight = child.getHeight(fittedWidth[pos]);
+      const childHeight = child.getHeight(fittedWidth[pos], availableHeight);
       const childWidth = fittedWidth[pos];
       let childY = y;
       switch (horizontalAlignment) {

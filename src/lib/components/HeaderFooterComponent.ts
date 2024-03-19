@@ -28,10 +28,15 @@ export class HeaderFooterComponent extends PdfComponent {
     );
   }
 
-  public getHeight(width: number): number {
-    const childHeight = this.child.getHeight(width);
-    const headerHeight = this.getHeader()?.getHeight(width) ?? 0;
-    const footerHeight = this.getFooter()?.getHeight(width) ?? 0;
+  public getHeight(width: number, availableHeight: number): number {
+    const headerHeight =
+      this.getHeader()?.getHeight(width, availableHeight) ?? 0;
+    const footerHeight =
+      this.getFooter()?.getHeight(width, availableHeight - headerHeight) ?? 0;
+    const childHeight = this.child.getHeight(
+      width,
+      availableHeight - headerHeight - footerHeight
+    );
     return childHeight + headerHeight + footerHeight;
   }
 
@@ -61,8 +66,9 @@ export class HeaderFooterComponent extends PdfComponent {
   ) {
     const header = this.getHeader();
     const footer = this.getFooter();
-    const headerHeight = header?.getHeight(width) ?? 0;
-    const footerHeight = footer?.getHeight(width) ?? 0;
+    const headerHeight = header?.getHeight(width, availableHeight) ?? 0;
+    const footerHeight =
+      footer?.getHeight(width, availableHeight - headerHeight) ?? 0;
 
     if (headerHeight + footerHeight > availableHeight) {
       return {

@@ -48,8 +48,13 @@ export class DivComponent extends PdfComponent {
     );
   }
 
-  public getHeight(width: number): number {
-    return this.child.getHeight(width - this.selfWidth) + this.selfHeight;
+  public getHeight(width: number, availableHeight: number): number {
+    return (
+      this.child.getHeight(
+        width - this.selfWidth,
+        availableHeight - this.selfHeight
+      ) + this.selfHeight
+    );
   }
 
   public async render(
@@ -65,7 +70,10 @@ export class DivComponent extends PdfComponent {
     const childX =
       x + this.options.padding.left + this.options.border.left.width;
     const childY = y + this.options.padding.top + this.options.border.top.width;
-    const childPreferredHeight = this.child.getHeight(childWidth);
+    const childPreferredHeight = this.child.getHeight(
+      childWidth,
+      childAvailableHeight
+    );
 
     if (
       childPreferredHeight >= childAvailableHeight + EPSILON &&

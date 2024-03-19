@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
-import { PdfComponent } from "./PdfComponent";
 import { getWidth, Width } from "./component-utils";
+import { PdfComponent } from "./PdfComponent";
 
 export type CrossAxisAlignment = "start" | "center" | "end";
 
@@ -40,7 +40,7 @@ export class ColumnComponent extends PdfComponent {
     return Math.max(...childrenWidth);
   }
 
-  public getHeight(width: number): number {
+  public getHeight(width: number, availableHeight: number): number {
     if (this.children.length === 0) return 0;
 
     const componentChildren = this.children.filter(
@@ -48,7 +48,7 @@ export class ColumnComponent extends PdfComponent {
     ) as PdfComponent[];
 
     const childrenHeight = componentChildren.map((c) =>
-      c.getHeight(c.getPreferredWidth(width))
+      c.getHeight(c.getPreferredWidth(width), availableHeight)
     );
     return childrenHeight.reduce((acc, h) => acc + h, 0);
   }
@@ -81,7 +81,7 @@ export class ColumnComponent extends PdfComponent {
 
     let spacerHeight = 0;
     if (fillHeight) {
-      const regularHeight = this.getHeight(width);
+      const regularHeight = this.getHeight(width, availableHeight);
       const spacerCount = this.children.filter((c) => c === "spacer").length;
       if (regularHeight < availableHeight && spacerCount > 0) {
         spacerHeight = (availableHeight - regularHeight) / spacerCount;
@@ -103,7 +103,7 @@ export class ColumnComponent extends PdfComponent {
       }
 
       const childWidth = child.getPreferredWidth(width);
-      const childHeight = child.getHeight(childWidth);
+      const childHeight = child.getHeight(childWidth, availableHeight);
 
       if (child.keepTogether && childHeight > availableHeight - addY) {
         nextPageChildren = this.children.slice(i);

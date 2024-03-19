@@ -1,8 +1,8 @@
 import jsPDF from "jspdf";
 import { PdfComponent } from "./PdfComponent";
 // import { Canvg } from "canvg";
-import { JSDOM } from "jsdom";
 import "@leoko/svg2pdf.js";
+import { JSDOM } from "jsdom";
 
 export interface SvgOptions {
   svg: string;
@@ -66,6 +66,7 @@ export class SvgComponent extends PdfComponent {
   }
 
   public getHeight(width: number): number {
+    // TODO: Adjust svg size computations to same logic as ImageComponent
     if (this.options.height) {
       return this.options.height;
     } else {
