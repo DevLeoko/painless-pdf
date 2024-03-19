@@ -5,6 +5,7 @@ import { PdfComponent, RenderResult } from "./PdfComponent";
 export interface SizedBoxOptions {
   height?: number | "max";
   width?: Width;
+  fixedHeight?: boolean;
 }
 
 export class SizedBoxComponent extends PdfComponent {
@@ -36,6 +37,18 @@ export class SizedBoxComponent extends PdfComponent {
     availableHeight: number
   ): Promise<RenderResult> {
     // No rendering needed for SizedBoxComponent as it's just an empty space
+    if (
+      this.options.fixedHeight &&
+      this.options.height &&
+      this.options.height != "max" &&
+      availableHeight < this.options.height
+    ) {
+      return {
+        renderedHeight: 0,
+        nextPage: this,
+      };
+    }
+
     return {
       renderedHeight: Math.min(
         availableHeight,
