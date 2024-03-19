@@ -27,10 +27,23 @@ export class SvgComponent extends PdfComponent {
 
     const svgElement = this.svgDom.window.document.documentElement;
 
-    const originalWidth = svgElement.getAttribute("width");
-    const originalHeight = svgElement.getAttribute("height");
+    let originalWidth = svgElement.getAttribute("width");
+    let originalHeight = svgElement.getAttribute("height");
+    const viewBox = svgElement.getAttribute("viewBox");
 
-    if (!svgElement.hasAttribute("viewBox")) {
+    if (!originalWidth || !originalHeight) {
+      if (!viewBox) {
+        throw new Error(
+          "SVG must have width and height attributes or a viewBox attribute"
+        );
+      }
+
+      const viewBoxParts = viewBox.split(" ");
+      originalWidth = viewBoxParts[2];
+      originalHeight = viewBoxParts[3];
+    }
+
+    if (!viewBox) {
       svgElement.setAttribute(
         "viewBox",
         `0 0 ${originalWidth} ${originalHeight}`
