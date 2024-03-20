@@ -18,6 +18,7 @@ export interface RowOptionsInput {
   crossAxisAlignment?: CrossAxisAlignment;
   growIndex?: number;
   keepTogether?: boolean;
+  fillHeight?: boolean;
 }
 
 interface RowOptions {
@@ -26,6 +27,7 @@ interface RowOptions {
   crossAxisAlignment: CrossAxisAlignment;
   growIndex?: number;
   keepTogether: boolean;
+  fillHeight?: boolean;
 }
 
 export class RowComponent extends PdfComponent {
@@ -160,6 +162,8 @@ export class RowComponent extends PdfComponent {
     dryRun: boolean,
     fillHeight: boolean
   ): Promise<RenderResult> {
+    fillHeight = fillHeight || this.options.fillHeight || false;
+
     if (this.children.length === 0) return { renderedHeight: 0 };
 
     const childrenWidth = this.children.map((c) => c.getPreferredWidth(width));
@@ -187,7 +191,7 @@ export class RowComponent extends PdfComponent {
       const child = this.children[pos];
 
       const childX = x + childXs[pos];
-      const childHeight = child.getHeight(fittedWidth[pos], availableHeight);
+      const childHeight = child.getHeight(fittedWidth[pos], height);
 
       if (availableHeight < childHeight) {
         if (child.keepTogether) {
@@ -217,7 +221,7 @@ export class RowComponent extends PdfComponent {
         childX,
         childY,
         childWidth,
-        availableHeight,
+        height,
         dryRun,
         horizontalAlignment == "stretch"
       );
