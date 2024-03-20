@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
-import { PdfComponent } from "./PdfComponent";
 import { EPSILON, getWidth, Width } from "./component-utils";
+import { PdfComponent } from "./PdfComponent";
 
 export type TextOptionsInput = {
   width?: Width;
@@ -60,22 +60,17 @@ export class TextComponent extends PdfComponent {
   }
 
   public getPreferredWidth(containerWidth: number) {
-    const maxWidth = this.options?.width
-      ? getWidth(containerWidth, this.options?.width)
-      : containerWidth;
+    if (this.options?.width)
+      return getWidth(containerWidth, this.options?.width);
 
-    const lines = this.document.splitTextToSize(this.text, maxWidth);
+    this.applyFontStyles();
+    const lines = this.document.splitTextToSize(this.text, containerWidth);
 
-    let width = maxWidth;
-    if (!this.options?.width) {
-      this.applyFontStyles();
-
-      // We add 0.5mm to counteract any rounding errors causing the text to wrap unnecessarily
-      this.document.setFontSize(this.options.fontSize);
-      width =
-        Math.max(...lines.map((l: string) => this.document.getTextWidth(l))) +
-        0.5;
-    }
+    // We add 0.5mm to counteract any rounding errors causing the text to wrap unnecessarily
+    this.document.setFontSize(this.options.fontSize);
+    const width =
+      Math.max(...lines.map((l: string) => this.document.getTextWidth(l))) +
+      0.5;
 
     return width;
   }
