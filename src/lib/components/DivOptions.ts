@@ -1,3 +1,4 @@
+import jsPDF from "jspdf";
 import { Width } from "./component-utils";
 
 export interface BorderOptions {
@@ -22,6 +23,14 @@ export interface DivOptionsInput {
     | BorderOptions;
   borderRadius?: number;
   keepTogether?: boolean;
+  beforeRender?: (
+    document: jsPDF,
+    boundingBox: { x: number; y: number; width: number; height: number }
+  ) => void;
+  afterRender?: (
+    document: jsPDF,
+    boundingBox: { x: number; y: number; width: number; height: number }
+  ) => void;
 }
 
 export interface DivOptions {
@@ -36,6 +45,14 @@ export interface DivOptions {
   };
   borderRadius: number;
   keepTogether?: boolean;
+  beforeRender?: (
+    document: jsPDF,
+    boundingBox: { x: number; y: number; width: number; height: number }
+  ) => void;
+  afterRender?: (
+    document: jsPDF,
+    boundingBox: { x: number; y: number; width: number; height: number }
+  ) => void;
 }
 
 export function transformInputOptions(options?: DivOptionsInput): DivOptions {
@@ -103,6 +120,9 @@ export function transformInputOptions(options?: DivOptionsInput): DivOptions {
     backgroundColor: options?.backgroundColor,
     width: options?.width,
     borderRadius: options?.borderRadius || 0,
+    keepTogether: options?.keepTogether,
+    beforeRender: options?.beforeRender,
+    afterRender: options?.afterRender,
     padding,
     border,
   };

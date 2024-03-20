@@ -105,6 +105,10 @@ export class DivComponent extends PdfComponent {
     }
 
     if (height && !dryRun) {
+      if (this.options.beforeRender) {
+        this.options.beforeRender(this.document, { x, y, width, height });
+      }
+
       if (this.options.backgroundColor) {
         const bgX = x + this.options.border.left.width;
         const bgY = y + this.options.border.top.width;
@@ -169,6 +173,10 @@ export class DivComponent extends PdfComponent {
         undefined,
         fillHeight
       ); // TODO: fill height should be passed here
+
+      if (this.options.afterRender) {
+        this.options.afterRender(this.document, { x, y, width, height });
+      }
     }
 
     return {
