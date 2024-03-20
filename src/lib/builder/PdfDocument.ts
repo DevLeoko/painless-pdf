@@ -1,9 +1,9 @@
 import jsPDF, { DocumentProperties } from "jspdf";
+import { DivComponent } from "../components/DivComponent";
+import { DivOptionsInput } from "../components/DivOptions";
 import { HeaderFooterComponent } from "../components/HeaderFooterComponent";
 import { PdfComponent, RenderResult } from "../components/PdfComponent";
 import { InheritedOptions, PdfBlueprint } from "./PdfBlueprint";
-import { DivOptionsInput } from "../components/DivOptions";
-import { DivComponent } from "../components/DivComponent";
 
 export class PdfDocument {
   private doc: jsPDF;

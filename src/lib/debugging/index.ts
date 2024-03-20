@@ -1,62 +1,59 @@
 import express from "express";
-import fs from "fs";
-import { ppColumn, ppDiv, ppSvg, ppText } from "../builder/PdfBlueprint";
+import livereload from "livereload";
+import {
+  ppColumn,
+  ppDiv,
+  ppPageBreak,
+  ppRow,
+  ppSizedBox,
+  ppText,
+} from "../builder/PdfBlueprint";
 import { PdfDocument } from "../builder/PdfDocument";
 
 const app = express();
 
-// Array from 1 to 100
-// const numbers = Array.from(Array(200).keys()).map((n) => n + 1);
-
-app.get("/", (req, res) => {
-  const testSvg = fs.readFileSync("src/assets/test.svg", { encoding: "utf8" });
-
-  // const base64Image = fs.readFileSync("src/assets/test.png", {
-  //   encoding: "base64",
-  // });
-
-  // const helloWorldText = ppText("Hello World", {
-  //   fontSize: 20,
-  //   textColor: "green",
-  // });
-
-  // const helloWorldDiv = ppDiv(helloWorldText, {
-  //   backgroundColor: "lightgreen",
-  //   border: { width: 1, color: "black" },
-  //   padding: { left: 5 },
-  // });
-
+app.get("/", async (req, res) => {
   const doc = new PdfDocument(
-    ppColumn(
-      // ppRow([helloWorldText, ppText("Lorem"), ppText("Ipsum")], {
-      //   width: { relative: 1 },
-      //   mainAxisAlignment: "space-between",
-      //   crossAxisAlignment: "center",
-      // }),
+    ppRow(
       [
-        ppSvg({
-          svg: testSvg,
-          width: 30,
-        }),
-        ppSvg({
-          svg: testSvg,
-          width: 60,
-        }),
-        ppSvg({
-          svg: testSvg,
-          width: 30,
-        }),
+        ppColumn(
+          [ppText("Hi")],
 
-        ppDiv(ppText("Hello World"), {
-          backgroundColor: "lightgreen",
-          width: 30,
-        }),
+          {
+            div: {
+              padding: 10,
+              backgroundColor: "#aaa",
+              width: 50,
+            },
+          }
+        ),
+        ppColumn(
+          [
+            ...new Array(25).fill(0).map((_, i) =>
+              ppDiv(ppSizedBox({ width: 30, height: 30, fixedHeight: true }), {
+                backgroundColor: i % 2 === 0 ? "red" : "blue",
+                borderRadius: i % 2 === 0 ? 0 : 15,
+              })
+            ),
+            ppPageBreak(),
+          ],
+          {
+            div: {
+              padding: 10,
+              backgroundColor: "lightblue",
+              width: { relative: 1 },
+            },
+          }
+        ),
       ],
-      { div: { padding: 20 } }
-    ),
-    {
-      header: (page) => ppText(`Page ${page + 1}`, { underline: true }),
-    }
+      {
+        crossAxisAlignment: "stretch",
+        keepTogether: false,
+        div: {
+          backgroundColor: "lightgreen",
+        },
+      }
+    )
   );
 
   doc.build().then(() => {
@@ -65,6 +62,16 @@ app.get("/", (req, res) => {
     const buff = Buffer.from(pdfOutput as any, "ascii");
     res.send(buff);
   });
+});
+
+const liveReload = livereload.createServer();
+
+// Refresh on browser connection
+liveReload.server.once("connection", () => {
+  console.log("LiveReload connected");
+  setTimeout(() => {
+    liveReload.refresh("/");
+  }, 500);
 });
 
 app.listen(3000, () => {
