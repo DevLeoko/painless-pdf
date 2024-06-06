@@ -90,7 +90,7 @@ export class ColumnComponent extends PdfComponent {
 
     let addY = 0;
     for (let i = 0; i < this.children.length; i++) {
-      if (addY >= availableHeight) {
+      if (addY > availableHeight) {
         nextPageChildren = this.children.slice(i);
         break;
       }
@@ -104,8 +104,9 @@ export class ColumnComponent extends PdfComponent {
 
       const childWidth = child.getPreferredWidth(width);
       const childHeight = child.getHeight(childWidth, availableHeight);
+      const remainingHeight = availableHeight - addY;
 
-      if (child.keepTogether && childHeight > availableHeight - addY) {
+      if (child.keepTogether && childHeight > remainingHeight) {
         nextPageChildren = this.children.slice(i);
         break;
       }
@@ -115,7 +116,7 @@ export class ColumnComponent extends PdfComponent {
       const childRenderResult = await child.apply(
         childX,
         y + addY,
-        availableHeight - addY,
+        remainingHeight,
         width,
         dryRun
       );
